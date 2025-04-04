@@ -10,105 +10,105 @@ namespace SoftGL
 
 class UniformBlockVulkan : public UniformBlock
 {
-  public:
-  UniformBlockVulkan(VKContext &ctx, const std::string &name, int size)
-    : vkCtx_(ctx)
-    , UniformBlock(name, size)
-  {
-    device_ = ctx.device();
-
-    descriptorBufferInfo_.offset = 0;
-    descriptorBufferInfo_.range = size;
-  }
-
-  int getLocation(ShaderProgram &program) override
-  {
-    auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
-    return programVulkan->getUniformLocation(name);
-  }
-
-  void bindProgram(ShaderProgram &program, int location) override
-  {
-    auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
-
-    if (ubo_ == nullptr)
+public:
+    UniformBlockVulkan(VKContext &ctx, const std::string &name, int size)
+        : vkCtx_(ctx)
+        , UniformBlock(name, size)
     {
-      LOGE("uniform bind program error: data not set");
-      return;
+        device_ = ctx.device();
+
+        descriptorBufferInfo_.offset = 0;
+        descriptorBufferInfo_.range = size;
     }
 
-    auto *cmd = programVulkan->getCommandBuffer();
-    if (cmd == nullptr)
+    int getLocation(ShaderProgram &program) override
     {
-      LOGE("uniform bind program error: not in render pass scope");
-      return;
+        auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
+        return programVulkan->getUniformLocation(name);
     }
-    cmd->uniformBuffers.push_back(ubo_);
-    programVulkan->bindUniformBuffer(descriptorBufferInfo_, location);
-    bindToCmd_ = true;
-  }
 
-  void setSubData(void *data, int len, int offset) override
-  {
-    if (bindToCmd_)
+    void bindProgram(ShaderProgram &program, int location) override
     {
-      ubo_ = vkCtx_.getNewUniformBuffer(blockSize);
-      descriptorBufferInfo_.buffer = ubo_->buffer.buffer;
+        auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
+
+        if (ubo_ == nullptr)
+        {
+            LOGE("uniform bind program error: data not set");
+            return;
+        }
+
+        auto *cmd = programVulkan->getCommandBuffer();
+        if (cmd == nullptr)
+        {
+            LOGE("uniform bind program error: not in render pass scope");
+            return;
+        }
+        cmd->uniformBuffers.push_back(ubo_);
+        programVulkan->bindUniformBuffer(descriptorBufferInfo_, location);
+        bindToCmd_ = true;
     }
-    memcpy((uint8_t *)ubo_->mapPtr + offset, data, len);
-    bindToCmd_ = false;
-  }
 
-  void setData(void *data, int len) override
-  {
-    setSubData(data, len, 0);
-  }
+    void setSubData(void *data, int len, int offset) override
+    {
+        if (bindToCmd_)
+        {
+            ubo_ = vkCtx_.getNewUniformBuffer(blockSize);
+            descriptorBufferInfo_.buffer = ubo_->buffer.buffer;
+        }
+        memcpy((uint8_t *)ubo_->mapPtr + offset, data, len);
+        bindToCmd_ = false;
+    }
 
-  private:
-  VKContext &vkCtx_;
-  VkDevice device_ = VK_NULL_HANDLE;
+    void setData(void *data, int len) override
+    {
+        setSubData(data, len, 0);
+    }
 
-  bool bindToCmd_ = true;
-  UniformBuffer *ubo_ = nullptr;
-  VkDescriptorBufferInfo descriptorBufferInfo_{};
+private:
+    VKContext &vkCtx_;
+    VkDevice device_ = VK_NULL_HANDLE;
+
+    bool bindToCmd_ = true;
+    UniformBuffer *ubo_ = nullptr;
+    VkDescriptorBufferInfo descriptorBufferInfo_{};
 };
 
 class UniformSamplerVulkan : public UniformSampler
 {
-  public:
-  UniformSamplerVulkan(VKContext &ctx, const std::string &name, TextureType type,
-                       TextureFormat format)
-    : vkCtx_(ctx)
-    , UniformSampler(name, type, format)
-  {
-    device_ = ctx.device();
-    descriptorImageInfo_.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  }
+public:
+    UniformSamplerVulkan(VKContext &ctx, const std::string &name, TextureType type,
+                         TextureFormat format)
+        : vkCtx_(ctx)
+        , UniformSampler(name, type, format)
+    {
+        device_ = ctx.device();
+        descriptorImageInfo_.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
 
-  int getLocation(ShaderProgram &program) override
-  {
-    auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
-    return programVulkan->getUniformLocation(name);
-  }
+    int getLocation(ShaderProgram &program) override
+    {
+        auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
+        return programVulkan->getUniformLocation(name);
+    }
 
-  void bindProgram(ShaderProgram &program, int location) override
-  {
-    auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
-    programVulkan->bindUniformSampler(descriptorImageInfo_, location);
-  }
+    void bindProgram(ShaderProgram &program, int location) override
+    {
+        auto programVulkan = dynamic_cast<ShaderProgramVulkan *>(&program);
+        programVulkan->bindUniformSampler(descriptorImageInfo_, location);
+    }
 
-  void setTexture(const std::shared_ptr<Texture> &tex) override
-  {
-    auto *texVulkan = dynamic_cast<TextureVulkan *>(tex.get());
-    descriptorImageInfo_.imageView = texVulkan->getSampleImageView();
-    descriptorImageInfo_.sampler = texVulkan->getSampler();
-  }
+    void setTexture(const std::shared_ptr<Texture> &tex) override
+    {
+        auto *texVulkan = dynamic_cast<TextureVulkan *>(tex.get());
+        descriptorImageInfo_.imageView = texVulkan->getSampleImageView();
+        descriptorImageInfo_.sampler = texVulkan->getSampler();
+    }
 
-  private:
-  VKContext &vkCtx_;
-  VkDevice device_ = VK_NULL_HANDLE;
+private:
+    VKContext &vkCtx_;
+    VkDevice device_ = VK_NULL_HANDLE;
 
-  VkDescriptorImageInfo descriptorImageInfo_{};
+    VkDescriptorImageInfo descriptorImageInfo_{};
 };
 
 } // namespace SoftGL

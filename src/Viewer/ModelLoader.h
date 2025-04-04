@@ -22,70 +22,70 @@ namespace View
 
 class ModelLoader
 {
-  public:
-  explicit ModelLoader(Config &config);
+public:
+    explicit ModelLoader(Config &config);
 
-  bool loadModel(const std::string &filepath);
-  bool loadSkybox(const std::string &filepath);
+    bool loadModel(const std::string &filepath);
+    bool loadSkybox(const std::string &filepath);
 
-  inline DemoScene &getScene()
-  {
-    return scene_;
-  }
-
-  inline size_t getModelPrimitiveCnt() const
-  {
-    if (scene_.model)
+    inline DemoScene &getScene()
     {
-      return scene_.model->primitiveCnt;
-    }
-    return 0;
-  }
-
-  inline void resetAllModelStates()
-  {
-    for (auto &kv : modelCache_)
-    {
-      kv.second->resetStates();
+        return scene_;
     }
 
-    for (auto &kv : skyboxMaterialCache_)
+    inline size_t getModelPrimitiveCnt() const
     {
-      kv.second->resetStates();
+        if (scene_.model)
+        {
+            return scene_.model->primitiveCnt;
+        }
+        return 0;
     }
-  }
 
-  static void loadCubeMesh(ModelVertexes &mesh);
+    inline void resetAllModelStates()
+    {
+        for (auto &kv : modelCache_)
+        {
+            kv.second->resetStates();
+        }
 
-  private:
-  void loadWorldAxis();
-  void loadLights();
-  void loadFloor();
+        for (auto &kv : skyboxMaterialCache_)
+        {
+            kv.second->resetStates();
+        }
+    }
 
-  bool processNode(const aiNode *ai_node, const aiScene *ai_scene, ModelNode &outNode,
-                   glm::mat4 &transform);
-  bool processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, ModelMesh &outMesh);
-  void processMaterial(const aiMaterial *ai_material, aiTextureType textureType,
-                       Material &material);
+    static void loadCubeMesh(ModelVertexes &mesh);
 
-  static glm::mat4 convertMatrix(const aiMatrix4x4 &m);
-  static BoundingBox convertBoundingBox(const aiAABB &aabb);
-  static WrapMode convertTexWrapMode(const aiTextureMapMode &mode);
-  static glm::mat4 adjustModelCenter(BoundingBox &bounds);
+private:
+    void loadWorldAxis();
+    void loadLights();
+    void loadFloor();
 
-  void preloadTextureFiles(const aiScene *scene, const std::string &resDir);
-  std::shared_ptr<Buffer<RGBA>> loadTextureFile(const std::string &path);
+    bool processNode(const aiNode *ai_node, const aiScene *ai_scene, ModelNode &outNode,
+                     glm::mat4 &transform);
+    bool processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, ModelMesh &outMesh);
+    void processMaterial(const aiMaterial *ai_material, aiTextureType textureType,
+                         Material &material);
 
-  private:
-  Config &config_;
+    static glm::mat4 convertMatrix(const aiMatrix4x4 &m);
+    static BoundingBox convertBoundingBox(const aiAABB &aabb);
+    static WrapMode convertTexWrapMode(const aiTextureMapMode &mode);
+    static glm::mat4 adjustModelCenter(BoundingBox &bounds);
 
-  DemoScene scene_;
-  std::unordered_map<std::string, std::shared_ptr<Model>> modelCache_;
-  std::unordered_map<std::string, std::shared_ptr<Buffer<RGBA>>> textureDataCache_;
-  std::unordered_map<std::string, std::shared_ptr<SkyboxMaterial>> skyboxMaterialCache_;
+    void preloadTextureFiles(const aiScene *scene, const std::string &resDir);
+    std::shared_ptr<Buffer<RGBA>> loadTextureFile(const std::string &path);
 
-  std::mutex modelLoadMutex_;
-  std::mutex texCacheMutex_;
+private:
+    Config &config_;
+
+    DemoScene scene_;
+    std::unordered_map<std::string, std::shared_ptr<Model>> modelCache_;
+    std::unordered_map<std::string, std::shared_ptr<Buffer<RGBA>>> textureDataCache_;
+    std::unordered_map<std::string, std::shared_ptr<SkyboxMaterial>> skyboxMaterialCache_;
+
+    std::mutex modelLoadMutex_;
+    std::mutex texCacheMutex_;
 };
 
 } // namespace View

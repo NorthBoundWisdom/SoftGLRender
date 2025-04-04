@@ -13,16 +13,16 @@ namespace SoftGL
 
 class PipelineStates
 {
-  public:
-  explicit PipelineStates(const RenderStates &states)
-    : renderStates(states)
-  {
-  }
+public:
+    explicit PipelineStates(const RenderStates &states)
+        : renderStates(states)
+    {
+    }
 
-  virtual ~PipelineStates() = default;
+    virtual ~PipelineStates() = default;
 
-  public:
-  RenderStates renderStates;
+public:
+    RenderStates renderStates;
 };
 
 } // namespace SoftGL

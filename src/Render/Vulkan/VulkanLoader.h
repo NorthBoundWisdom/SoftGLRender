@@ -30,31 +30,31 @@ namespace SoftGL
 
 class VKLoader
 {
-  public:
-  static void init(VkInstance instance)
-  {
-    LOAD_VK_FUNC(vkCreateDebugUtilsMessengerEXT);
-    LOAD_VK_FUNC(vkDestroyDebugUtilsMessengerEXT);
+public:
+    static void init(VkInstance instance)
+    {
+        LOAD_VK_FUNC(vkCreateDebugUtilsMessengerEXT);
+        LOAD_VK_FUNC(vkDestroyDebugUtilsMessengerEXT);
 
 #ifdef PLATFORM_WINDOWS
-    LOAD_VK_FUNC(vkGetSemaphoreWin32HandleKHR);
-    LOAD_VK_FUNC(vkGetMemoryWin32HandleKHR);
+        LOAD_VK_FUNC(vkGetSemaphoreWin32HandleKHR);
+        LOAD_VK_FUNC(vkGetMemoryWin32HandleKHR);
 #else
-    LOAD_VK_FUNC(vkGetSemaphoreFdKHR);
-    LOAD_VK_FUNC(vkGetMemoryFdKHR);
+        LOAD_VK_FUNC(vkGetSemaphoreFdKHR);
+        LOAD_VK_FUNC(vkGetMemoryFdKHR);
 #endif
-  }
+    }
 
-  public:
-  REG_VK_FUNC(vkCreateDebugUtilsMessengerEXT);
-  REG_VK_FUNC(vkDestroyDebugUtilsMessengerEXT);
+public:
+    REG_VK_FUNC(vkCreateDebugUtilsMessengerEXT);
+    REG_VK_FUNC(vkDestroyDebugUtilsMessengerEXT);
 
 #ifdef PLATFORM_WINDOWS
-  REG_VK_FUNC(vkGetSemaphoreWin32HandleKHR);
-  REG_VK_FUNC(vkGetMemoryWin32HandleKHR);
+    REG_VK_FUNC(vkGetSemaphoreWin32HandleKHR);
+    REG_VK_FUNC(vkGetMemoryWin32HandleKHR);
 #else
-  REG_VK_FUNC(vkGetSemaphoreFdKHR);
-  REG_VK_FUNC(vkGetMemoryFdKHR);
+    REG_VK_FUNC(vkGetSemaphoreFdKHR);
+    REG_VK_FUNC(vkGetMemoryFdKHR);
 #endif
 };
 

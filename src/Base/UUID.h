@@ -12,20 +12,20 @@ namespace SoftGL
 template <typename T>
 class UUID
 {
-  public:
-  UUID()
-    : uuid_(uuidCounter_++)
-  {
-  }
+public:
+    UUID()
+        : uuid_(uuidCounter_++)
+    {
+    }
 
-  inline int get() const
-  {
-    return uuid_;
-  }
+    inline int get() const
+    {
+        return uuid_;
+    }
 
-  private:
-  int uuid_ = -1;
-  static int uuidCounter_;
+private:
+    int uuid_ = -1;
+    static int uuidCounter_;
 };
 
 template <typename T>

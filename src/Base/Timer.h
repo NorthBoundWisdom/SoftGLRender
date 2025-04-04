@@ -16,39 +16,39 @@ namespace SoftGL
 
 class Timer
 {
-  public:
-  void start();
-  void stop();
-  int64_t elapseMillis() const;
+public:
+    void start();
+    void stop();
+    int64_t elapseMillis() const;
 
-  private:
-  std::chrono::time_point<std::chrono::steady_clock> start_;
-  std::chrono::time_point<std::chrono::steady_clock> end_;
+private:
+    std::chrono::time_point<std::chrono::steady_clock> start_;
+    std::chrono::time_point<std::chrono::steady_clock> end_;
 };
 
 class ScopedTimer
 {
-  public:
-  ScopedTimer(const char *str)
-    : tag_(str)
-  {
-    timer_.start();
-  }
+public:
+    ScopedTimer(const char *str)
+        : tag_(str)
+    {
+        timer_.start();
+    }
 
-  ~ScopedTimer()
-  {
-    timer_.stop();
-    LOGD("TIMER %s: cost: %lld ms", tag_.c_str(), timer_.elapseMillis());
-  }
+    ~ScopedTimer()
+    {
+        timer_.stop();
+        LOGD("TIMER %s: cost: %lld ms", tag_.c_str(), timer_.elapseMillis());
+    }
 
-  explicit operator bool()
-  {
-    return true;
-  }
+    explicit operator bool()
+    {
+        return true;
+    }
 
-  private:
-  Timer timer_;
-  std::string tag_;
+private:
+    Timer timer_;
+    std::string tag_;
 };
 
 #ifndef NDEBUG

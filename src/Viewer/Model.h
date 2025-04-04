@@ -21,60 +21,60 @@ namespace View
 
 struct Vertex
 {
-  glm::vec3 a_position;
-  glm::vec2 a_texCoord;
-  glm::vec3 a_normal;
-  glm::vec3 a_tangent;
+    glm::vec3 a_position;
+    glm::vec2 a_texCoord;
+    glm::vec3 a_normal;
+    glm::vec3 a_tangent;
 };
 
 struct ModelVertexes : VertexArray
 {
-  PrimitiveType primitiveType;
-  size_t primitiveCnt = 0;
-  std::vector<Vertex> vertexes;
-  std::vector<int32_t> indices;
+    PrimitiveType primitiveType;
+    size_t primitiveCnt = 0;
+    std::vector<Vertex> vertexes;
+    std::vector<int32_t> indices;
 
-  std::shared_ptr<VertexArrayObject> vao = nullptr;
+    std::shared_ptr<VertexArrayObject> vao = nullptr;
 
-  void UpdateVertexes() const
-  {
-    if (vao)
+    void UpdateVertexes() const
     {
-      vao->updateVertexData(vertexesBuffer, vertexesBufferLength);
+        if (vao)
+        {
+            vao->updateVertexData(vertexesBuffer, vertexesBufferLength);
+        }
+    };
+
+    void InitVertexes()
+    {
+        vertexSize = sizeof(Vertex);
+
+        vertexesDesc.resize(4);
+        vertexesDesc[0] = {3, sizeof(Vertex), offsetof(Vertex, a_position)};
+        vertexesDesc[1] = {2, sizeof(Vertex), offsetof(Vertex, a_texCoord)};
+        vertexesDesc[2] = {3, sizeof(Vertex), offsetof(Vertex, a_normal)};
+        vertexesDesc[3] = {3, sizeof(Vertex), offsetof(Vertex, a_tangent)};
+
+        vertexesBuffer = vertexes.empty() ? nullptr : (uint8_t *)&vertexes[0];
+        vertexesBufferLength = vertexes.size() * sizeof(Vertex);
+
+        indexBuffer = indices.empty() ? nullptr : &indices[0];
+        indexBufferLength = indices.size() * sizeof(int32_t);
     }
-  };
-
-  void InitVertexes()
-  {
-    vertexSize = sizeof(Vertex);
-
-    vertexesDesc.resize(4);
-    vertexesDesc[0] = {3, sizeof(Vertex), offsetof(Vertex, a_position)};
-    vertexesDesc[1] = {2, sizeof(Vertex), offsetof(Vertex, a_texCoord)};
-    vertexesDesc[2] = {3, sizeof(Vertex), offsetof(Vertex, a_normal)};
-    vertexesDesc[3] = {3, sizeof(Vertex), offsetof(Vertex, a_tangent)};
-
-    vertexesBuffer = vertexes.empty() ? nullptr : (uint8_t *)&vertexes[0];
-    vertexesBufferLength = vertexes.size() * sizeof(Vertex);
-
-    indexBuffer = indices.empty() ? nullptr : &indices[0];
-    indexBufferLength = indices.size() * sizeof(int32_t);
-  }
 };
 
 struct ModelBase : ModelVertexes
 {
-  BoundingBox aabb{};
-  std::shared_ptr<Material> material = nullptr;
+    BoundingBox aabb{};
+    std::shared_ptr<Material> material = nullptr;
 
-  virtual void resetStates()
-  {
-    vao = nullptr;
-    if (material)
+    virtual void resetStates()
     {
-      material->resetStates();
+        vao = nullptr;
+        if (material)
+        {
+            material->resetStates();
+        }
     }
-  }
 };
 
 struct ModelPoints : ModelBase
@@ -91,61 +91,61 @@ struct ModelMesh : ModelBase
 
 struct ModelNode
 {
-  glm::mat4 transform = glm::mat4(1.f);
-  std::vector<ModelMesh> meshes;
-  std::vector<ModelNode> children;
+    glm::mat4 transform = glm::mat4(1.f);
+    std::vector<ModelMesh> meshes;
+    std::vector<ModelNode> children;
 };
 
 struct Model
 {
-  std::string resourcePath;
+    std::string resourcePath;
 
-  ModelNode rootNode;
-  BoundingBox rootAABB;
+    ModelNode rootNode;
+    BoundingBox rootAABB;
 
-  size_t meshCnt = 0;
-  size_t primitiveCnt = 0;
-  size_t vertexCnt = 0;
+    size_t meshCnt = 0;
+    size_t primitiveCnt = 0;
+    size_t vertexCnt = 0;
 
-  glm::mat4 centeredTransform;
+    glm::mat4 centeredTransform;
 
-  void resetStates()
-  {
-    resetNodeStates(rootNode);
-  }
-
-  void resetNodeStates(ModelNode &node)
-  {
-    for (auto &mesh : node.meshes)
+    void resetStates()
     {
-      mesh.resetStates();
+        resetNodeStates(rootNode);
     }
-    for (auto &childNode : node.children)
+
+    void resetNodeStates(ModelNode &node)
     {
-      resetNodeStates(childNode);
+        for (auto &mesh : node.meshes)
+        {
+            mesh.resetStates();
+        }
+        for (auto &childNode : node.children)
+        {
+            resetNodeStates(childNode);
+        }
     }
-  }
 };
 
 struct DemoScene
 {
-  std::shared_ptr<Model> model;
-  ModelLines worldAxis;
-  ModelPoints pointLight;
-  ModelMesh floor;
-  ModelMesh skybox;
+    std::shared_ptr<Model> model;
+    ModelLines worldAxis;
+    ModelPoints pointLight;
+    ModelMesh floor;
+    ModelMesh skybox;
 
-  void resetStates()
-  {
-    if (model)
+    void resetStates()
     {
-      model->resetStates();
+        if (model)
+        {
+            model->resetStates();
+        }
+        worldAxis.resetStates();
+        pointLight.resetStates();
+        floor.resetStates();
+        skybox.resetStates();
     }
-    worldAxis.resetStates();
-    pointLight.resetStates();
-    floor.resetStates();
-    skybox.resetStates();
-  }
 };
 
 } // namespace View
