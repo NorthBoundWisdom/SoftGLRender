@@ -6,42 +6,54 @@
 
 #pragma once
 
-#include "Viewer.h"
 #include "Config.h"
 #include "Render/Vulkan/RendererVulkan.h"
 #include "Render/Vulkan/TextureVulkan.h"
 #include "Render/Vulkan/VKGLInterop.h"
+#include "Viewer.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-#define CASE_CREATE_SHADER_VK(shading, source) case shading: \
-  return programVK->compileAndLinkGLSLFile(SHADER_GLSL_DIR + #source + ".vert", \
-                                           SHADER_GLSL_DIR + #source + ".frag")
+#define CASE_CREATE_SHADER_VK(shading, source)                                                     \
+  case shading:                                                                                    \
+    return programVK->compileAndLinkGLSLFile(SHADER_GLSL_DIR + #source + ".vert",                  \
+                                             SHADER_GLSL_DIR + #source + ".frag")
 
-class ViewerVulkan : public Viewer {
- public:
-  ViewerVulkan(Config &config, Camera &camera) : Viewer(config, camera) {
+class ViewerVulkan : public Viewer
+{
+  public:
+  ViewerVulkan(Config &config, Camera &camera)
+    : Viewer(config, camera)
+  {
   }
 
-  void configRenderer() override {
+  void configRenderer() override
+  {
     camera_->setReverseZ(config_.reverseZ);
     cameraDepth_->setReverseZ(config_.reverseZ);
 
-    if (glInterop_ && VKGLInterop::isAvailable()) {
+    if (glInterop_ && VKGLInterop::isAvailable())
+    {
       glInterop_->signalGLComplete();
     }
   }
 
-  int swapBuffer() override {
+  int swapBuffer() override
+  {
     auto *vkTex = dynamic_cast<TextureVulkan *>(texColorMain_.get());
 
     // first round or texture changed
-    if (glInterop_ != &vkTex->getGLInterop()) {
+    if (glInterop_ != &vkTex->getGLInterop())
+    {
       glInterop_ = &vkTex->getGLInterop();
-      if (VKGLInterop::isAvailable()) {
+      if (VKGLInterop::isAvailable())
+      {
         // create new GL texture
-        if (interopOutTex_ > 0) {
+        if (interopOutTex_ > 0)
+        {
           GL_CHECK(glDeleteTextures(1, &interopOutTex_));
         }
         interopOutTex_ = createGLTexture2D();
@@ -52,57 +64,63 @@ class ViewerVulkan : public Viewer {
       }
     }
 
-    if (glInterop_ && VKGLInterop::isAvailable()) {
+    if (glInterop_ && VKGLInterop::isAvailable())
+    {
       glInterop_->waitGLReady();
-      return (int) interopOutTex_;
+      return (int)interopOutTex_;
     }
 
-    vkTex->readPixels(0, 0, [&](uint8_t *buffer, uint32_t width, uint32_t height, uint32_t rowStride) -> void {
-      GL_CHECK(glBindTexture(GL_TEXTURE_2D, outTexId_));
-      GL_CHECK(glPixelStorei(GL_UNPACK_ROW_LENGTH, rowStride / sizeof(RGBA)));
-      GL_CHECK(glTexSubImage2D(GL_TEXTURE_2D,
-                               0,
-                               0,
-                               0,
-                               width,
-                               height,
-                               GL_RGBA,
-                               GL_UNSIGNED_BYTE,
-                               buffer));
-      GL_CHECK(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
-    });
+    vkTex->readPixels(
+      0, 0,
+      [&](uint8_t *buffer, uint32_t width, uint32_t height, uint32_t rowStride) -> void
+      {
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D, outTexId_));
+        GL_CHECK(glPixelStorei(GL_UNPACK_ROW_LENGTH, rowStride / sizeof(RGBA)));
+        GL_CHECK(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
+                                 buffer));
+        GL_CHECK(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
+      });
     return outTexId_;
   }
 
-  bool create(int width, int height, int outTexId) override {
+  bool create(int width, int height, int outTexId) override
+  {
     glInterop_ = nullptr;
     return Viewer::create(width, height, outTexId);
   }
 
-  void destroy() override {
+  void destroy() override
+  {
     Viewer::destroy();
-    if (interopOutTex_ > 0) {
+    if (interopOutTex_ > 0)
+    {
       GL_CHECK(glDeleteTextures(1, &interopOutTex_));
     }
     glInterop_ = nullptr;
   }
 
-  std::shared_ptr<Renderer> createRenderer() override {
+  std::shared_ptr<Renderer> createRenderer() override
+  {
     auto renderer = std::make_shared<RendererVulkan>();
-    if (!renderer->create()) {
+    if (!renderer->create())
+    {
       return nullptr;
     }
     return renderer;
   }
 
-  void *getDevicePointer() override {
+  void *getDevicePointer() override
+  {
     auto *rendererVK = dynamic_cast<RendererVulkan *>(renderer_.get());
-    return (*((void **) (rendererVK->getVkCtx().instance())));   // RENDERDOC_DEVICEPOINTER_FROM_VKINSTANCE
+    return (
+      *((void **)(rendererVK->getVkCtx().instance()))); // RENDERDOC_DEVICEPOINTER_FROM_VKINSTANCE
   }
 
-  bool loadShaders(ShaderProgram &program, ShadingModel shading) override {
+  bool loadShaders(ShaderProgram &program, ShadingModel shading) override
+  {
     auto *programVK = dynamic_cast<ShaderProgramVulkan *>(&program);
-    switch (shading) {
+    switch (shading)
+    {
       CASE_CREATE_SHADER_VK(Shading_BaseColor, BasicGLSL);
       CASE_CREATE_SHADER_VK(Shading_BlinnPhong, BlinnPhongGLSL);
       CASE_CREATE_SHADER_VK(Shading_PBR, PbrGLSL);
@@ -110,14 +128,14 @@ class ViewerVulkan : public Viewer {
       CASE_CREATE_SHADER_VK(Shading_IBL_Irradiance, IBLIrradianceGLSL);
       CASE_CREATE_SHADER_VK(Shading_IBL_Prefilter, IBLPrefilterGLSL);
       CASE_CREATE_SHADER_VK(Shading_FXAA, FxaaGLSL);
-      default:
-        break;
+    default: break;
     }
 
     return false;
   }
 
-  static GLuint createGLTexture2D() {
+  static GLuint createGLTexture2D()
+  {
     unsigned int texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0);
@@ -129,10 +147,10 @@ class ViewerVulkan : public Viewer {
     return texture;
   }
 
- private:
+  private:
   GLuint interopOutTex_ = 0;
   VKGLInterop *glInterop_ = nullptr;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

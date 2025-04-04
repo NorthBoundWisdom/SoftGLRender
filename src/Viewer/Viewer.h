@@ -7,19 +7,26 @@
 #pragma once
 
 #include "Base/GLMInc.h"
-#include "Render/Renderer.h"
-#include "Model.h"
-#include "Config.h"
 #include "Camera.h"
-#include "QuadFilter.h"
+#include "Config.h"
 #include "Environment.h"
+#include "Model.h"
+#include "QuadFilter.h"
+#include "Render/Renderer.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-class Viewer {
- public:
-  Viewer(Config &config, Camera &camera) : config_(config), cameraMain_(camera) {}
+class Viewer
+{
+  public:
+  Viewer(Config &config, Camera &camera)
+    : config_(config)
+    , cameraMain_(camera)
+  {
+  }
 
   virtual bool create(int width, int height, int outTexId);
   virtual void destroy();
@@ -32,13 +39,16 @@ class Viewer {
   void resetReverseZ();
 
   // used by RenderDoc to capture frames
-  virtual void *getDevicePointer() { return nullptr; }
+  virtual void *getDevicePointer()
+  {
+    return nullptr;
+  }
 
- protected:
+  protected:
   virtual std::shared_ptr<Renderer> createRenderer() = 0;
   virtual bool loadShaders(ShaderProgram &program, ShadingModel shading) = 0;
 
- private:
+  private:
   void cleanup();
 
   void drawShadowMap();
@@ -55,7 +65,8 @@ class Viewer {
   void setupSkybox(ModelMesh &skybox);
 
   void drawScene(bool shadowPass);
-  void drawModelNodes(ModelNode &node, bool shadowPass, glm::mat4 &transform, AlphaMode mode, float specular = 1.f);
+  void drawModelNodes(ModelNode &node, bool shadowPass, glm::mat4 &transform, AlphaMode mode,
+                      float specular = 1.f);
   void drawModelMesh(ModelMesh &mesh, bool shadowPass, float specular);
 
   void pipelineSetup(ModelBase &model, ShadingModel shading, const std::set<int> &uniformBlocks,
@@ -71,7 +82,8 @@ class Viewer {
   void setupTextures(Material &material);
   bool setupShaderProgram(Material &material, ShadingModel shading);
   void setupSamplerUniforms(Material &material);
-  void setupPipelineStates(ModelBase &model, const std::function<void(RenderStates &rs)> &extraStates);
+  void setupPipelineStates(ModelBase &model,
+                           const std::function<void(RenderStates &rs)> &extraStates);
   void setupMaterial(ModelBase &model, ShadingModel shading, const std::set<int> &uniformBlocks,
                      const std::function<void(RenderStates &rs)> &extraStates);
 
@@ -86,14 +98,17 @@ class Viewer {
   void updateShadowTextures(MaterialObject *materialObj, bool shadowPass);
 
   static std::set<std::string> generateShaderDefines(Material &material);
-  static size_t getShaderProgramCacheKey(ShadingModel shading, const std::set<std::string> &defines);
+  static size_t getShaderProgramCacheKey(ShadingModel shading,
+                                         const std::set<std::string> &defines);
   static size_t getPipelineCacheKey(Material &material, const RenderStates &rs);
 
-  std::shared_ptr<Texture> createTextureCubeDefault(int width, int height, uint32_t usage, bool mipmaps = false);
-  std::shared_ptr<Texture> createTexture2DDefault(int width, int height, TextureFormat format, uint32_t usage, bool mipmaps = false);
+  std::shared_ptr<Texture> createTextureCubeDefault(int width, int height, uint32_t usage,
+                                                    bool mipmaps = false);
+  std::shared_ptr<Texture> createTexture2DDefault(int width, int height, TextureFormat format,
+                                                  uint32_t usage, bool mipmaps = false);
   bool checkMeshFrustumCull(ModelMesh &mesh, const glm::mat4 &transform);
 
- protected:
+  protected:
   Config &config_;
 
   Camera &cameraMain_;
@@ -136,5 +151,5 @@ class Viewer {
   std::unordered_map<size_t, std::shared_ptr<PipelineStates>> pipelineCache_;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

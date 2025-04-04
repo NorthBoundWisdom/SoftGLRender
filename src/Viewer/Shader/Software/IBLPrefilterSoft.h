@@ -8,20 +8,25 @@
 
 #include "Render/Software/ShaderProgramSoft.h"
 
-namespace SoftGL {
-namespace ShaderIBLPrefilter {
+namespace SoftGL
+{
+namespace ShaderIBLPrefilter
+{
 
-struct ShaderDefines {
+struct ShaderDefines
+{
 };
 
-struct ShaderAttributes {
+struct ShaderAttributes
+{
   glm::vec3 a_position;
   glm::vec2 a_texCoord;
   glm::vec3 a_normal;
   glm::vec3 a_tangent;
 };
 
-struct ShaderUniforms {
+struct ShaderUniforms
+{
   // UniformsModel
   glm::int32_t u_reverseZ;
   glm::mat4 u_modelMatrix;
@@ -37,34 +42,40 @@ struct ShaderUniforms {
   SamplerCubeSoft<RGBA> *u_cubeMap;
 };
 
-struct ShaderVaryings {
+struct ShaderVaryings
+{
   glm::vec3 v_worldPos;
 };
 
-class ShaderIBLPrefilter : public ShaderSoft {
- public:
+class ShaderIBLPrefilter : public ShaderSoft
+{
+  public:
   CREATE_SHADER_OVERRIDE
 
-  std::vector<std::string> &getDefines() override {
+  std::vector<std::string> &getDefines() override
+  {
     static std::vector<std::string> defines;
     return defines;
   }
 
-  std::vector<UniformDesc> &getUniformsDesc() override {
+  std::vector<UniformDesc> &getUniformsDesc() override
+  {
     static std::vector<UniformDesc> desc = {
-        {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
-        {"UniformsPrefilter", offsetof(ShaderUniforms, u_srcResolution)},
-        {"u_cubeMap", offsetof(ShaderUniforms, u_cubeMap)},
+      {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
+      {"UniformsPrefilter", offsetof(ShaderUniforms, u_srcResolution)},
+      {"u_cubeMap", offsetof(ShaderUniforms, u_cubeMap)},
     };
     return desc;
   };
 };
 
-class VS : public ShaderIBLPrefilter {
- public:
+class VS : public ShaderIBLPrefilter
+{
+  public:
   CREATE_SHADER_CLONE(VS)
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     glm::vec4 pos = u->u_modelViewProjectionMatrix * glm::vec4(a->a_position, 1.0);
     gl->Position = pos;
     gl->Position.z = pos.w;
@@ -72,11 +83,13 @@ class VS : public ShaderIBLPrefilter {
   }
 };
 
-class FS : public ShaderIBLPrefilter {
- public:
+class FS : public ShaderIBLPrefilter
+{
+  public:
   CREATE_SHADER_CLONE(FS)
 
-  static float DistributionGGX(glm::vec3 N, glm::vec3 H, float roughness) {
+  static float DistributionGGX(glm::vec3 N, glm::vec3 H, float roughness)
+  {
     float a = roughness * roughness;
     float a2 = a * a;
     float NdotH = glm::max(dot(N, H), 0.0f);
@@ -91,7 +104,8 @@ class FS : public ShaderIBLPrefilter {
   // ----------------------------------------------------------------------------
   // http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
   // efficient VanDerCorpus calculation.
-  static float RadicalInverse_VdC(uint32_t bits) {
+  static float RadicalInverse_VdC(uint32_t bits)
+  {
     bits = (bits << 16u) | (bits >> 16u);
     bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
     bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
@@ -100,11 +114,13 @@ class FS : public ShaderIBLPrefilter {
     return float((bits) * 2.3283064365386963e-10); // / 0x100000000
   }
   // ----------------------------------------------------------------------------
-  static glm::vec2 Hammersley(uint32_t i, uint32_t N) {
+  static glm::vec2 Hammersley(uint32_t i, uint32_t N)
+  {
     return {float(i) / float(N), RadicalInverse_VdC(i)};
   }
   // ----------------------------------------------------------------------------
-  static glm::vec3 ImportanceSampleGGX(glm::vec2 Xi, glm::vec3 N, float roughness) {
+  static glm::vec3 ImportanceSampleGGX(glm::vec2 Xi, glm::vec3 N, float roughness)
+  {
     float a = roughness * roughness;
 
     float phi = 2.0f * PI * Xi.x;
@@ -126,7 +142,8 @@ class FS : public ShaderIBLPrefilter {
     return glm::normalize(sampleVec);
   }
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     glm::vec3 N = normalize(v->v_worldPos);
 
     // make the simplyfying assumption that V equals R equals the normal
@@ -137,14 +154,17 @@ class FS : public ShaderIBLPrefilter {
     glm::vec3 prefilteredColor = glm::vec3(0.0f);
     float totalWeight = 0.0f;
 
-    for (uint32_t i = 0u; i < SAMPLE_COUNT; ++i) {
-      // generates a sample vector that's biased towards the preferred alignment direction (importance sampling).
+    for (uint32_t i = 0u; i < SAMPLE_COUNT; ++i)
+    {
+      // generates a sample vector that's biased towards the preferred alignment direction
+      // (importance sampling).
       glm::vec2 Xi = Hammersley(i, SAMPLE_COUNT);
       glm::vec3 H = ImportanceSampleGGX(Xi, N, u->u_roughness);
       glm::vec3 L = glm::normalize(2.0f * dot(V, H) * H - V);
 
       float NdotL = glm::max(glm::dot(N, L), 0.0f);
-      if (NdotL > 0.0f) {
+      if (NdotL > 0.0f)
+      {
         // sample from the environment's mip level based on roughness/pdf
         float D = DistributionGGX(N, H, u->u_roughness);
         float NdotH = glm::max(dot(N, H), 0.0f);
@@ -168,5 +188,5 @@ class FS : public ShaderIBLPrefilter {
   }
 };
 
-}
-}
+} // namespace ShaderIBLPrefilter
+} // namespace SoftGL

@@ -8,24 +8,29 @@
 
 #include "Render/Software/ShaderProgramSoft.h"
 
-namespace SoftGL {
-namespace ShaderBlinnPhong {
+namespace SoftGL
+{
+namespace ShaderBlinnPhong
+{
 
-struct ShaderDefines {
+struct ShaderDefines
+{
   uint8_t ALBEDO_MAP;
   uint8_t NORMAL_MAP;
   uint8_t EMISSIVE_MAP;
   uint8_t AO_MAP;
 };
 
-struct ShaderAttributes {
+struct ShaderAttributes
+{
   glm::vec3 a_position;
   glm::vec2 a_texCoord;
   glm::vec3 a_normal;
   glm::vec3 a_tangent;
 };
 
-struct ShaderUniforms {
+struct ShaderUniforms
+{
   // UniformsModel
   glm::int32_t u_reverseZ;
   glm::mat4 u_modelMatrix;
@@ -55,7 +60,8 @@ struct ShaderUniforms {
   Sampler2DSoft<float> *u_shadowMap;
 };
 
-struct ShaderVaryings {
+struct ShaderVaryings
+{
   glm::vec2 v_texCoord;
   glm::vec3 v_normalVector;
   glm::vec3 v_worldPos;
@@ -67,40 +73,45 @@ struct ShaderVaryings {
   glm::vec3 v_tangent;
 };
 
-class ShaderBlinnPhong : public ShaderSoft {
- public:
+class ShaderBlinnPhong : public ShaderSoft
+{
+  public:
   CREATE_SHADER_OVERRIDE
 
-  std::vector<std::string> &getDefines() override {
+  std::vector<std::string> &getDefines() override
+  {
     static std::vector<std::string> defines = {
-        "ALBEDO_MAP",
-        "NORMAL_MAP",
-        "EMISSIVE_MAP",
-        "AO_MAP",
+      "ALBEDO_MAP",
+      "NORMAL_MAP",
+      "EMISSIVE_MAP",
+      "AO_MAP",
     };
     return defines;
   }
 
-  std::vector<UniformDesc> &getUniformsDesc() override {
+  std::vector<UniformDesc> &getUniformsDesc() override
+  {
     static std::vector<UniformDesc> desc = {
-        {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
-        {"UniformsScene", offsetof(ShaderUniforms, u_ambientColor)},
-        {"UniformsMaterial", offsetof(ShaderUniforms, u_enableLight)},
-        {"u_albedoMap", offsetof(ShaderUniforms, u_albedoMap)},
-        {"u_normalMap", offsetof(ShaderUniforms, u_normalMap)},
-        {"u_emissiveMap", offsetof(ShaderUniforms, u_emissiveMap)},
-        {"u_aoMap", offsetof(ShaderUniforms, u_aoMap)},
-        {"u_shadowMap", offsetof(ShaderUniforms, u_shadowMap)},
+      {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
+      {"UniformsScene", offsetof(ShaderUniforms, u_ambientColor)},
+      {"UniformsMaterial", offsetof(ShaderUniforms, u_enableLight)},
+      {"u_albedoMap", offsetof(ShaderUniforms, u_albedoMap)},
+      {"u_normalMap", offsetof(ShaderUniforms, u_normalMap)},
+      {"u_emissiveMap", offsetof(ShaderUniforms, u_emissiveMap)},
+      {"u_aoMap", offsetof(ShaderUniforms, u_aoMap)},
+      {"u_shadowMap", offsetof(ShaderUniforms, u_shadowMap)},
     };
     return desc;
   };
 };
 
-class VS : public ShaderBlinnPhong {
- public:
+class VS : public ShaderBlinnPhong
+{
+  public:
   CREATE_SHADER_CLONE(VS)
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     glm::vec4 position = glm::vec4(a->a_position, 1.0);
     gl->Position = u->u_modelViewProjectionMatrix * position;
     v->v_texCoord = a->a_texCoord;
@@ -112,7 +123,8 @@ class VS : public ShaderBlinnPhong {
     v->v_lightDirection = u->u_pointLightPosition - v->v_worldPos;
     v->v_cameraDirection = u->u_cameraPosition - v->v_worldPos;
 
-    if (def->NORMAL_MAP) {
+    if (def->NORMAL_MAP)
+    {
       glm::vec3 N = glm::normalize(u->u_inverseTransposeModelMatrix * a->a_normal);
       glm::vec3 T = glm::normalize(u->u_inverseTransposeModelMatrix * a->a_tangent);
       v->v_normal = N;
@@ -121,34 +133,43 @@ class VS : public ShaderBlinnPhong {
   }
 };
 
-class FS : public ShaderBlinnPhong {
- public:
+class FS : public ShaderBlinnPhong
+{
+  public:
   CREATE_SHADER_CLONE(FS)
 
   const float depthBiasCoeff = 0.00025f;
   const float depthBiasMin = 0.00005f;
 
-  size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override {
+  size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override
+  {
     return offsetof(ShaderVaryings, v_texCoord);
   }
 
-  void setupSamplerDerivative() override {
-    if (def->ALBEDO_MAP) {
+  void setupSamplerDerivative() override
+  {
+    if (def->ALBEDO_MAP)
+    {
       u->u_albedoMap->setLodFunc(&texLodFunc);
     }
-    if (def->NORMAL_MAP) {
+    if (def->NORMAL_MAP)
+    {
       u->u_normalMap->setLodFunc(&texLodFunc);
     }
-    if (def->EMISSIVE_MAP) {
+    if (def->EMISSIVE_MAP)
+    {
       u->u_emissiveMap->setLodFunc(&texLodFunc);
     }
-    if (def->AO_MAP) {
+    if (def->AO_MAP)
+    {
       u->u_aoMap->setLodFunc(&texLodFunc);
     }
   }
 
-  glm::vec3 GetNormalFromMap() {
-    if (def->NORMAL_MAP) {
+  glm::vec3 GetNormalFromMap()
+  {
+    if (def->NORMAL_MAP)
+    {
       glm::vec3 N = glm::normalize(v->v_normal);
       glm::vec3 T = glm::normalize(v->v_tangent);
       T = glm::normalize(T - glm::dot(T, N) * N);
@@ -157,29 +178,41 @@ class FS : public ShaderBlinnPhong {
 
       glm::vec3 tangentNormal = glm::vec3(texture(u->u_normalMap, v->v_texCoord)) * 2.0f - 1.0f;
       return glm::normalize(TBN * tangentNormal);
-    } else {
+    }
+    else
+    {
       return glm::normalize(v->v_normalVector);
     }
   }
 
-  float ShadowCalculation(glm::vec4 fragPos, glm::vec3 normal) {
+  float ShadowCalculation(glm::vec4 fragPos, glm::vec3 normal)
+  {
     glm::vec3 projCoords = glm::vec3(fragPos) / fragPos.w;
     float currentDepth = projCoords.z;
-    if (currentDepth < 0.f || currentDepth > 1.f) {
+    if (currentDepth < 0.f || currentDepth > 1.f)
+    {
       return 0.0f;
     }
 
-    float bias = glm::max(depthBiasCoeff * (1.0f - glm::dot(normal, glm::normalize(v->v_lightDirection))), depthBiasMin);
+    float bias =
+      glm::max(depthBiasCoeff * (1.0f - glm::dot(normal, glm::normalize(v->v_lightDirection))),
+               depthBiasMin);
     float shadow = 0.0f;
 
     // PCF
-    glm::vec2 pixelOffset = 1.0f / (glm::vec2) textureSize(u->u_shadowMap, 0);
-    for (int x = -1; x <= 1; ++x) {
-      for (int y = -1; y <= 1; ++y) {
-        float pcfDepth = texture(u->u_shadowMap, glm::vec2(projCoords) + glm::vec2(x, y) * pixelOffset);
-        if (u->u_reverseZ) {
+    glm::vec2 pixelOffset = 1.0f / (glm::vec2)textureSize(u->u_shadowMap, 0);
+    for (int x = -1; x <= 1; ++x)
+    {
+      for (int y = -1; y <= 1; ++y)
+      {
+        float pcfDepth =
+          texture(u->u_shadowMap, glm::vec2(projCoords) + glm::vec2(x, y) * pixelOffset);
+        if (u->u_reverseZ)
+        {
           shadow += currentDepth + bias < pcfDepth ? 1.0f : 0.0f;
-        } else {
+        }
+        else
+        {
           shadow += currentDepth - bias > pcfDepth ? 1.0f : 0.0f;
         }
       }
@@ -188,14 +221,18 @@ class FS : public ShaderBlinnPhong {
     return shadow;
   }
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     const static float pointLightRangeInverse = 1.0f / 5.f;
     const static float specularExponent = 128.f;
 
     glm::vec4 baseColor;
-    if (def->ALBEDO_MAP) {
+    if (def->ALBEDO_MAP)
+    {
       baseColor = texture(u->u_albedoMap, v->v_texCoord);
-    } else {
+    }
+    else
+    {
       baseColor = u->u_baseColor;
     }
 
@@ -203,7 +240,8 @@ class FS : public ShaderBlinnPhong {
 
     // ambient
     float ao = 1.f;
-    if (def->AO_MAP) {
+    if (def->AO_MAP)
+    {
       ao = texture(u->u_aoMap, v->v_texCoord).r;
     }
     glm::vec3 ambientColor = glm::vec3(baseColor) * u->u_ambientColor * ao;
@@ -211,7 +249,8 @@ class FS : public ShaderBlinnPhong {
     glm::vec3 specularColor = glm::vec3(0.f);
     glm::vec3 emissiveColor = glm::vec3(0.f);
 
-    if (u->u_enableLight) {
+    if (u->u_enableLight)
+    {
       // diffuse
       glm::vec3 lDir = v->v_lightDirection * pointLightRangeInverse;
       float attenuation = glm::clamp(1.0f - dot(lDir, lDir), 0.0f, 1.0f);
@@ -226,7 +265,8 @@ class FS : public ShaderBlinnPhong {
       float specularAngle = glm::max(dot(N, halfVector), 0.0f);
       specularColor = u->u_kSpecular * glm::vec3(glm::pow(specularAngle, specularExponent));
 
-      if (u->u_enableShadow) {
+      if (u->u_enableShadow)
+      {
         // calculate shadow
         float shadow = 1.0f - ShadowCalculation(v->v_shadowFragPos, N);
         diffuseColor *= shadow;
@@ -234,13 +274,15 @@ class FS : public ShaderBlinnPhong {
       }
     }
 
-    if (def->EMISSIVE_MAP) {
+    if (def->EMISSIVE_MAP)
+    {
       emissiveColor = texture(u->u_emissiveMap, v->v_texCoord);
     }
 
-    gl->FragColor = glm::vec4(ambientColor + diffuseColor + specularColor + emissiveColor, baseColor.a);
+    gl->FragColor =
+      glm::vec4(ambientColor + diffuseColor + specularColor + emissiveColor, baseColor.a);
   }
 };
 
-}
-}
+} // namespace ShaderBlinnPhong
+} // namespace SoftGL

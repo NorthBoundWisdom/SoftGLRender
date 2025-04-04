@@ -6,19 +6,23 @@
 
 #include "Timer.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-void Timer::start() {
+void Timer::start()
+{
   start_ = std::chrono::steady_clock::now();
 }
 
-void Timer::stop() {
+void Timer::stop()
+{
   end_ = std::chrono::steady_clock::now();
 }
 
-int64_t Timer::elapseMillis() const {
+int64_t Timer::elapseMillis() const
+{
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_);
   return duration.count();
 }
 
-}
+} // namespace SoftGL

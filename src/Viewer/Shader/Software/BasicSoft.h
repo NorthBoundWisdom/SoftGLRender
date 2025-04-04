@@ -8,20 +8,25 @@
 
 #include "Render/Software/ShaderProgramSoft.h"
 
-namespace SoftGL {
-namespace ShaderBasic {
+namespace SoftGL
+{
+namespace ShaderBasic
+{
 
-struct ShaderDefines {
+struct ShaderDefines
+{
 };
 
-struct ShaderAttributes {
+struct ShaderAttributes
+{
   glm::vec3 a_position;
   glm::vec2 a_texCoord;
   glm::vec3 a_normal;
   glm::vec3 a_tangent;
 };
 
-struct ShaderUniforms {
+struct ShaderUniforms
+{
   // UniformsModel
   glm::int32_t u_reverseZ;
   glm::mat4 u_modelMatrix;
@@ -38,45 +43,53 @@ struct ShaderUniforms {
   glm::vec4 u_baseColor;
 };
 
-struct ShaderVaryings {
+struct ShaderVaryings
+{
 };
 
-class ShaderBasic : public ShaderSoft {
- public:
+class ShaderBasic : public ShaderSoft
+{
+  public:
   CREATE_SHADER_OVERRIDE
 
-  std::vector<std::string> &getDefines() override {
+  std::vector<std::string> &getDefines() override
+  {
     static std::vector<std::string> defines;
     return defines;
   }
 
-  std::vector<UniformDesc> &getUniformsDesc() override {
+  std::vector<UniformDesc> &getUniformsDesc() override
+  {
     static std::vector<UniformDesc> desc = {
-        {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
-        {"UniformsMaterial", offsetof(ShaderUniforms, u_enableLight)},
+      {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
+      {"UniformsMaterial", offsetof(ShaderUniforms, u_enableLight)},
     };
     return desc;
   };
 };
 
-class VS : public ShaderBasic {
- public:
+class VS : public ShaderBasic
+{
+  public:
   CREATE_SHADER_CLONE(VS)
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     gl->Position = u->u_modelViewProjectionMatrix * glm::vec4(a->a_position, 1.0);
     gl->PointSize = u->u_pointSize;
   }
 };
 
-class FS : public ShaderBasic {
- public:
+class FS : public ShaderBasic
+{
+  public:
   CREATE_SHADER_CLONE(FS)
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     gl->FragColor = u->u_baseColor;
   }
 };
 
-}
-}
+} // namespace ShaderBasic
+} // namespace SoftGL

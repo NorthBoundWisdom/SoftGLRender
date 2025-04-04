@@ -4,11 +4,12 @@
  *
  */
 
-#include <iostream>
-#include <sstream>
-
+// clang-format off
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// clang-format on
+#include <iostream>
+#include <sstream>
 
 #include "Base/Logger.h"
 #include "Render/OpenGL/GLSLUtils.h"
@@ -53,14 +54,17 @@ void main()
 }
 )";
 
-static void glfwErrorCallback(int error, const char *description) {
+static void glfwErrorCallback(int error, const char *description)
+{
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-int main() {
+int main()
+{
   /* Initialize the library */
   glfwSetErrorCallback(glfwErrorCallback);
-  if (!glfwInit()) {
+  if (!glfwInit())
+  {
     LOGE("Failed to initialize GLFW");
     return -1;
   }
@@ -74,7 +78,8 @@ int main() {
 
   /* create a windowed mode window and its OpenGL context */
   GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SoftGLRenderer", nullptr, nullptr);
-  if (!window) {
+  if (!window)
+  {
     LOGE("Failed to create GLFW window");
     glfwTerminate();
     return -1;
@@ -87,17 +92,19 @@ int main() {
   glfwSetScrollCallback(window, scrollCallback);
 
   // tell GLFW to capture our mouse
-//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  //    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   /* Load all OpenGL function pointers */
-  if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+  {
     LOGE("Failed to initialize GLAD");
     glfwTerminate();
     return -1;
   }
 
   SoftGL::ProgramGLSL program;
-  if (!program.loadSource(VS, FS)) {
+  if (!program.loadSource(VS, FS))
+  {
     LOGE("Failed to initialize Shader");
     glfwTerminate();
     return -1;
@@ -105,15 +112,15 @@ int main() {
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   float vertices[] = {
-      // positions | texture coords
-      1.f, 1.f, 0.0f, 1.0f, 1.0f, // top right
-      1.f, -1.f, 0.0f, 1.0f, 0.0f, // bottom right
-      -1.f, -1.f, 0.0f, 0.0f, 0.0f, // bottom left
-      -1.f, 1.f, 0.0f, 0.0f, 1.0f  // top left
+    // positions | texture coords
+    1.f,  1.f,  0.0f, 1.0f, 1.0f, // top right
+    1.f,  -1.f, 0.0f, 1.0f, 0.0f, // bottom right
+    -1.f, -1.f, 0.0f, 0.0f, 0.0f, // bottom left
+    -1.f, 1.f,  0.0f, 0.0f, 1.0f  // top left
   };
   unsigned int indices[] = {
-      0, 1, 3, // first triangle
-      1, 2, 3  // second triangle
+    0, 1, 3, // first triangle
+    1, 2, 3  // second triangle
   };
   GLuint VAO, VBO, EBO;
   glGenVertexArrays(1, &VAO);
@@ -125,7 +132,7 @@ int main() {
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
   glGenBuffers(1, &EBO);
@@ -144,23 +151,28 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+               nullptr);
 
   program.use();
   glUniform1i(glGetUniformLocation(program.getId(), "uTexture"), 0);
 
   // init Viewer
   viewer = std::make_shared<SoftGL::View::ViewerManager>();
-  bool initSuccess = viewer->create(window, SCR_WIDTH, SCR_HEIGHT, (int) texture);
-  if (!initSuccess) {
+  bool initSuccess = viewer->create(window, SCR_WIDTH, SCR_HEIGHT, (int)texture);
+  if (!initSuccess)
+  {
     LOGE("Failed to create Viewer");
-  } else {
+  }
+  else
+  {
     // real frame buffer size
     int frameWidth, frameHeight;
     glfwGetFramebufferSize(window, &frameWidth, &frameHeight);
 
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window))
+    {
       // check exit app
       processInput(window);
 
@@ -208,38 +220,48 @@ int main() {
   return 0;
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react
+// accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window) {
-  if (!viewer || viewer->wantCaptureKeyboard()) {
+void processInput(GLFWwindow *window)
+{
+  if (!viewer || viewer->wantCaptureKeyboard())
+  {
     return;
   }
 
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+  {
     glfwSetWindowShouldClose(window, true);
     return;
   }
 
   static bool keyPressed_H = false;
   int state = glfwGetKey(window, GLFW_KEY_H);
-  if (state == GLFW_PRESS) {
-    if (!keyPressed_H) {
+  if (state == GLFW_PRESS)
+  {
+    if (!keyPressed_H)
+    {
       keyPressed_H = true;
       viewer->togglePanelState();
     }
-  } else if (state == GLFW_RELEASE) {
+  }
+  else if (state == GLFW_RELEASE)
+  {
     keyPressed_H = false;
   }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
+void framebufferSizeCallback(GLFWwindow *window, int width, int height)
+{
   // make sure the viewport matches the new window dimensions; note that width and
   // height will be significantly larger than specified on retina displays.
   glViewport(0, 0, width, height);
 
-  if (!viewer) {
+  if (!viewer)
+  {
     return;
   }
   viewer->updateSize(width, height);
@@ -247,13 +269,17 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void mouseCallback(GLFWwindow *window, double xPos, double yPos) {
-  if (!viewer || viewer->wantCaptureMouse()) {
+void mouseCallback(GLFWwindow *window, double xPos, double yPos)
+{
+  if (!viewer || viewer->wantCaptureMouse())
+  {
     return;
   }
 
-  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-    if (firstMouse) {
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+  {
+    if (firstMouse)
+    {
       lastX = xPos;
       lastY = yPos;
       firstMouse = false;
@@ -262,25 +288,32 @@ void mouseCallback(GLFWwindow *window, double xPos, double yPos) {
     double xOffset = xPos - lastX;
     double yOffset = yPos - lastY;
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-      viewer->updateGesturePan((float) xOffset, (float) yOffset);
-    } else {
-      viewer->updateGestureRotate((float) xOffset, (float) yOffset);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+      viewer->updateGesturePan((float)xOffset, (float)yOffset);
+    }
+    else
+    {
+      viewer->updateGestureRotate((float)xOffset, (float)yOffset);
     }
 
     lastX = xPos;
     lastY = yPos;
-  } else {
+  }
+  else
+  {
     firstMouse = true;
   }
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scrollCallback(GLFWwindow *window, double xOffset, double yOffset) {
-  if (!viewer || viewer->wantCaptureMouse()) {
+void scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
+{
+  if (!viewer || viewer->wantCaptureMouse())
+  {
     return;
   }
 
-  viewer->updateGestureZoom((float) xOffset, (float) yOffset);
+  viewer->updateGestureZoom((float)xOffset, (float)yOffset);
 }

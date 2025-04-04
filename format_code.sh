@@ -4,7 +4,7 @@
 CLANG_FORMAT="C:/Program Files/LLVM/bin/clang-format.exe"
 
 # set the target directory
-TARGET_DIR="C:/Users/EthanKang/Documents/SoftGLRender/src/Render"
+TARGET_DIR="C:/Users/EthanKang/Documents/SoftGLRender/src/Viewer"
 # switch to the target directory
 cd "$TARGET_DIR" || exit
 

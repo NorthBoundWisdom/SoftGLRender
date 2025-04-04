@@ -6,54 +6,67 @@
 
 #pragma once
 
-#include <unordered_map>
-#include <mutex>
 #include <assimp/scene.h>
+#include <mutex>
+#include <unordered_map>
 
 #include "Base/Buffer.h"
-#include "Model.h"
 #include "Config.h"
 #include "ConfigPanel.h"
+#include "Model.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-class ModelLoader {
- public:
+class ModelLoader
+{
+  public:
   explicit ModelLoader(Config &config);
 
   bool loadModel(const std::string &filepath);
   bool loadSkybox(const std::string &filepath);
 
-  inline DemoScene &getScene() { return scene_; }
+  inline DemoScene &getScene()
+  {
+    return scene_;
+  }
 
-  inline size_t getModelPrimitiveCnt() const {
-    if (scene_.model) {
+  inline size_t getModelPrimitiveCnt() const
+  {
+    if (scene_.model)
+    {
       return scene_.model->primitiveCnt;
     }
     return 0;
   }
 
-  inline void resetAllModelStates() {
-    for (auto &kv : modelCache_) {
+  inline void resetAllModelStates()
+  {
+    for (auto &kv : modelCache_)
+    {
       kv.second->resetStates();
     }
 
-    for (auto &kv : skyboxMaterialCache_) {
+    for (auto &kv : skyboxMaterialCache_)
+    {
       kv.second->resetStates();
     }
   }
 
   static void loadCubeMesh(ModelVertexes &mesh);
 
- private:
+  private:
   void loadWorldAxis();
   void loadLights();
   void loadFloor();
 
-  bool processNode(const aiNode *ai_node, const aiScene *ai_scene, ModelNode &outNode, glm::mat4 &transform);
+  bool processNode(const aiNode *ai_node, const aiScene *ai_scene, ModelNode &outNode,
+                   glm::mat4 &transform);
   bool processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, ModelMesh &outMesh);
-  void processMaterial(const aiMaterial *ai_material, aiTextureType textureType, Material &material);
+  void processMaterial(const aiMaterial *ai_material, aiTextureType textureType,
+                       Material &material);
 
   static glm::mat4 convertMatrix(const aiMatrix4x4 &m);
   static BoundingBox convertBoundingBox(const aiAABB &aabb);
@@ -63,7 +76,7 @@ class ModelLoader {
   void preloadTextureFiles(const aiScene *scene, const std::string &resDir);
   std::shared_ptr<Buffer<RGBA>> loadTextureFile(const std::string &path);
 
- private:
+  private:
   Config &config_;
 
   DemoScene scene_;
@@ -75,5 +88,5 @@ class ModelLoader {
   std::mutex texCacheMutex_;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

@@ -5,36 +5,45 @@
  */
 
 #include "Camera.h"
+
 #include <algorithm>
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-void Camera::setPerspective(float fov, float aspect, float near, float far) {
+void Camera::setPerspective(float fov, float aspect, float near, float far)
+{
   fov_ = fov;
   aspect_ = aspect;
   near_ = near;
   far_ = far;
 }
 
-void Camera::lookAt(const glm::vec3 &eye, const glm::vec3 &center, const glm::vec3 &up) {
+void Camera::lookAt(const glm::vec3 &eye, const glm::vec3 &center, const glm::vec3 &up)
+{
   eye_ = eye;
   center_ = center;
   up_ = up;
 }
 
-glm::mat4 Camera::projectionMatrix() const {
+glm::mat4 Camera::projectionMatrix() const
+{
   float tanHalfFovInverse = 1.f / std::tan((fov_ * 0.5f));
 
   glm::mat4 projection(0.f);
   projection[0][0] = tanHalfFovInverse / aspect_;
   projection[1][1] = tanHalfFovInverse;
 
-  if (reverseZ_) {
+  if (reverseZ_)
+  {
     projection[2][2] = 0.f;
     projection[2][3] = -1.f;
     projection[3][2] = near_;
-  } else {
+  }
+  else
+  {
     projection[2][2] = -1.f;
     projection[2][3] = -1.f;
     projection[3][2] = -near_;
@@ -43,7 +52,8 @@ glm::mat4 Camera::projectionMatrix() const {
   return projection;
 }
 
-glm::mat4 Camera::viewMatrix() const {
+glm::mat4 Camera::viewMatrix() const
+{
   glm::vec3 forward(glm::normalize(center_ - eye_));
   glm::vec3 side(glm::normalize(cross(forward, up_)));
   glm::vec3 up(glm::cross(side, forward));
@@ -68,7 +78,8 @@ glm::mat4 Camera::viewMatrix() const {
   return view;
 }
 
-glm::vec3 Camera::getWorldPositionFromView(glm::vec3 pos) const {
+glm::vec3 Camera::getWorldPositionFromView(glm::vec3 pos) const
+{
   glm::mat4 proj, view, projInv, viewInv;
   proj = projectionMatrix();
   view = viewMatrix();
@@ -82,7 +93,8 @@ glm::vec3 Camera::getWorldPositionFromView(glm::vec3 pos) const {
   return glm::vec3{pos_world};
 }
 
-void Camera::update() {
+void Camera::update()
+{
   glm::vec3 forward(glm::normalize(center_ - eye_));
   glm::vec3 side(glm::normalize(cross(forward, up_)));
   glm::vec3 up(glm::cross(side, forward));
@@ -145,7 +157,8 @@ void Camera::update() {
   // bounding box
   frustum_.bbox.min = glm::vec3(std::numeric_limits<float>::max());
   frustum_.bbox.max = glm::vec3(std::numeric_limits<float>::min());
-  for (auto &corner : frustum_.corners) {
+  for (auto &corner : frustum_.corners)
+  {
     frustum_.bbox.min.x = std::min(frustum_.bbox.min.x, corner.x);
     frustum_.bbox.min.y = std::min(frustum_.bbox.min.y, corner.y);
     frustum_.bbox.min.z = std::min(frustum_.bbox.min.z, corner.z);
@@ -156,5 +169,5 @@ void Camera::update() {
   }
 }
 
-}
-}
+} // namespace View
+} // namespace SoftGL

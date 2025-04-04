@@ -6,34 +6,42 @@
 
 #include "ModelLoader.h"
 
+#include <assimp/GltfMaterial.h>
+#include <assimp/postprocess.h>
 #include <iostream>
 #include <set>
+
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/GltfMaterial.h>
 
 #include "Base/ImageUtils.h"
-#include "Base/ThreadPool.h"
-#include "Base/StringUtils.h"
 #include "Base/Logger.h"
+#include "Base/StringUtils.h"
+#include "Base/ThreadPool.h"
 #include "Cube.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-ModelLoader::ModelLoader(Config &config) : config_(config) {
+ModelLoader::ModelLoader(Config &config)
+  : config_(config)
+{
   loadWorldAxis();
   loadLights();
   loadFloor();
 }
 
-void ModelLoader::loadCubeMesh(ModelVertexes &mesh) {
+void ModelLoader::loadCubeMesh(ModelVertexes &mesh)
+{
   const float *cubeVertexes = Cube::getCubeVertexes();
 
   mesh.primitiveType = Primitive_TRIANGLE;
   mesh.primitiveCnt = 12;
-  for (int i = 0; i < 12; i++) {
-    for (int j = 0; j < 3; j++) {
+  for (int i = 0; i < 12; i++)
+  {
+    for (int j = 0; j < 3; j++)
+    {
       Vertex vertex{};
       vertex.a_position.x = cubeVertexes[i * 9 + j * 3 + 0];
       vertex.a_position.y = cubeVertexes[i * 9 + j * 3 + 1];
@@ -45,17 +53,19 @@ void ModelLoader::loadCubeMesh(ModelVertexes &mesh) {
   mesh.InitVertexes();
 }
 
-void ModelLoader::loadWorldAxis() {
+void ModelLoader::loadWorldAxis()
+{
   float axisY = -0.01f;
   int idx = 0;
-  for (int i = -16; i <= 16; i++) {
-    scene_.worldAxis.vertexes.push_back({glm::vec3(-3.2, axisY, 0.2f * (float) i)});
-    scene_.worldAxis.vertexes.push_back({glm::vec3(3.2, axisY, 0.2f * (float) i)});
+  for (int i = -16; i <= 16; i++)
+  {
+    scene_.worldAxis.vertexes.push_back({glm::vec3(-3.2, axisY, 0.2f * (float)i)});
+    scene_.worldAxis.vertexes.push_back({glm::vec3(3.2, axisY, 0.2f * (float)i)});
     scene_.worldAxis.indices.push_back(idx++);
     scene_.worldAxis.indices.push_back(idx++);
 
-    scene_.worldAxis.vertexes.push_back({glm::vec3(0.2f * (float) i, axisY, -3.2)});
-    scene_.worldAxis.vertexes.push_back({glm::vec3(0.2f * (float) i, axisY, 3.2)});
+    scene_.worldAxis.vertexes.push_back({glm::vec3(0.2f * (float)i, axisY, -3.2)});
+    scene_.worldAxis.vertexes.push_back({glm::vec3(0.2f * (float)i, axisY, 3.2)});
     scene_.worldAxis.indices.push_back(idx++);
     scene_.worldAxis.indices.push_back(idx++);
   }
@@ -69,7 +79,8 @@ void ModelLoader::loadWorldAxis() {
   scene_.worldAxis.material->lineWidth = 1.f;
 }
 
-void ModelLoader::loadLights() {
+void ModelLoader::loadLights()
+{
   scene_.pointLight.primitiveType = Primitive_POINT;
   scene_.pointLight.primitiveCnt = 1;
   scene_.pointLight.vertexes.resize(scene_.pointLight.primitiveCnt);
@@ -84,17 +95,18 @@ void ModelLoader::loadLights() {
   scene_.pointLight.InitVertexes();
 }
 
-void ModelLoader::loadFloor() {
+void ModelLoader::loadFloor()
+{
   float floorY = 0.01f;
   float floorSize = 2.0f;
-  scene_.floor.vertexes.push_back({glm::vec3(-floorSize, floorY, floorSize), glm::vec2(0.f, 1.f),
-                                   glm::vec3(0.f, 1.f, 0.f)});
-  scene_.floor.vertexes.push_back({glm::vec3(-floorSize, floorY, -floorSize), glm::vec2(0.f, 0.f),
-                                   glm::vec3(0.f, 1.f, 0.f)});
-  scene_.floor.vertexes.push_back({glm::vec3(floorSize, floorY, -floorSize), glm::vec2(1.f, 0.f),
-                                   glm::vec3(0.f, 1.f, 0.f)});
-  scene_.floor.vertexes.push_back({glm::vec3(floorSize, floorY, floorSize), glm::vec2(1.f, 1.f),
-                                   glm::vec3(0.f, 1.f, 0.f)});
+  scene_.floor.vertexes.push_back(
+    {glm::vec3(-floorSize, floorY, floorSize), glm::vec2(0.f, 1.f), glm::vec3(0.f, 1.f, 0.f)});
+  scene_.floor.vertexes.push_back(
+    {glm::vec3(-floorSize, floorY, -floorSize), glm::vec2(0.f, 0.f), glm::vec3(0.f, 1.f, 0.f)});
+  scene_.floor.vertexes.push_back(
+    {glm::vec3(floorSize, floorY, -floorSize), glm::vec2(1.f, 0.f), glm::vec3(0.f, 1.f, 0.f)});
+  scene_.floor.vertexes.push_back(
+    {glm::vec3(floorSize, floorY, floorSize), glm::vec2(1.f, 1.f), glm::vec3(0.f, 1.f, 0.f)});
   scene_.floor.indices.push_back(0);
   scene_.floor.indices.push_back(2);
   scene_.floor.indices.push_back(1);
@@ -114,16 +126,20 @@ void ModelLoader::loadFloor() {
   scene_.floor.InitVertexes();
 }
 
-bool ModelLoader::loadSkybox(const std::string &filepath) {
-  if (filepath.empty()) {
+bool ModelLoader::loadSkybox(const std::string &filepath)
+{
+  if (filepath.empty())
+  {
     return false;
   }
-  if (scene_.skybox.primitiveCnt <= 0) {
+  if (scene_.skybox.primitiveCnt <= 0)
+  {
     loadCubeMesh(scene_.skybox);
   }
 
   auto it = skyboxMaterialCache_.find(filepath);
-  if (it != skyboxMaterialCache_.end()) {
+  if (it != skyboxMaterialCache_.end())
+  {
     scene_.skybox.material = it->second;
     return true;
   }
@@ -133,7 +149,8 @@ bool ModelLoader::loadSkybox(const std::string &filepath) {
   material->shadingModel = Shading_Skybox;
 
   std::vector<std::shared_ptr<Buffer<RGBA>>> skyboxTex;
-  if (StringUtils::endsWith(filepath, "/")) {
+  if (StringUtils::endsWith(filepath, "/"))
+  {
     skyboxTex.resize(6);
 
     ThreadPool pool(6);
@@ -153,7 +170,9 @@ bool ModelLoader::loadSkybox(const std::string &filepath) {
     texData.wrapModeU = Wrap_CLAMP_TO_EDGE;
     texData.wrapModeV = Wrap_CLAMP_TO_EDGE;
     texData.wrapModeW = Wrap_CLAMP_TO_EDGE;
-  } else {
+  }
+  else
+  {
     skyboxTex.resize(1);
     skyboxTex[0] = loadTextureFile(filepath);
 
@@ -172,14 +191,17 @@ bool ModelLoader::loadSkybox(const std::string &filepath) {
   return true;
 }
 
-bool ModelLoader::loadModel(const std::string &filepath) {
+bool ModelLoader::loadModel(const std::string &filepath)
+{
   std::lock_guard<std::mutex> lk(modelLoadMutex_);
-  if (filepath.empty()) {
+  if (filepath.empty())
+  {
     return false;
   }
 
   auto it = modelCache_.find(filepath);
-  if (it != modelCache_.end()) {
+  if (it != modelCache_.end())
+  {
     scene_.model = it->second;
     return true;
   }
@@ -191,18 +213,16 @@ bool ModelLoader::loadModel(const std::string &filepath) {
 
   // load model
   Assimp::Importer importer;
-  if (filepath.empty()) {
+  if (filepath.empty())
+  {
     LOGE("ModelLoader::loadModel, empty model file path.");
     return false;
   }
-  const aiScene *scene = importer.ReadFile(filepath,
-                                           aiProcess_Triangulate |
-                                               aiProcess_CalcTangentSpace |
-                                               aiProcess_FlipUVs |
-                                               aiProcess_GenBoundingBoxes);
-  if (!scene
-      || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE
-      || !scene->mRootNode) {
+  const aiScene *scene =
+    importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_CalcTangentSpace |
+                                  aiProcess_FlipUVs | aiProcess_GenBoundingBoxes);
+  if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+  {
     LOGE("ModelLoader::loadModel, description: %s", importer.GetErrorString());
     return false;
   }
@@ -212,7 +232,8 @@ bool ModelLoader::loadModel(const std::string &filepath) {
   preloadTextureFiles(scene, scene_.model->resourcePath);
 
   auto currTransform = glm::mat4(1.f);
-  if (!processNode(scene->mRootNode, scene, scene_.model->rootNode, currTransform)) {
+  if (!processNode(scene->mRootNode, scene, scene_.model->rootNode, currTransform))
+  {
     LOGE("ModelLoader::loadModel, process node failed.");
     return false;
   }
@@ -222,22 +243,25 @@ bool ModelLoader::loadModel(const std::string &filepath) {
   return true;
 }
 
-bool ModelLoader::processNode(const aiNode *ai_node,
-                              const aiScene *ai_scene,
-                              ModelNode &outNode,
-                              glm::mat4 &transform) {
-  if (!ai_node) {
+bool ModelLoader::processNode(const aiNode *ai_node, const aiScene *ai_scene, ModelNode &outNode,
+                              glm::mat4 &transform)
+{
+  if (!ai_node)
+  {
     return false;
   }
 
   outNode.transform = convertMatrix(ai_node->mTransformation);
   auto currTransform = transform * outNode.transform;
 
-  for (size_t i = 0; i < ai_node->mNumMeshes; i++) {
+  for (size_t i = 0; i < ai_node->mNumMeshes; i++)
+  {
     const aiMesh *meshPtr = ai_scene->mMeshes[ai_node->mMeshes[i]];
-    if (meshPtr) {
+    if (meshPtr)
+    {
       ModelMesh mesh;
-      if (processMesh(meshPtr, ai_scene, mesh)) {
+      if (processMesh(meshPtr, ai_scene, mesh))
+      {
         scene_.model->meshCnt++;
         scene_.model->primitiveCnt += mesh.primitiveCnt;
         scene_.model->vertexCnt += mesh.vertexes.size();
@@ -251,66 +275,82 @@ bool ModelLoader::processNode(const aiNode *ai_node,
     }
   }
 
-  for (size_t i = 0; i < ai_node->mNumChildren; i++) {
+  for (size_t i = 0; i < ai_node->mNumChildren; i++)
+  {
     ModelNode childNode;
-    if (processNode(ai_node->mChildren[i], ai_scene, childNode, currTransform)) {
+    if (processNode(ai_node->mChildren[i], ai_scene, childNode, currTransform))
+    {
       outNode.children.push_back(std::move(childNode));
     }
   }
   return true;
 }
 
-bool ModelLoader::processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, ModelMesh &outMesh) {
+bool ModelLoader::processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, ModelMesh &outMesh)
+{
   std::vector<Vertex> vertexes;
   std::vector<int> indices;
 
-  for (size_t i = 0; i < ai_mesh->mNumVertices; i++) {
+  for (size_t i = 0; i < ai_mesh->mNumVertices; i++)
+  {
     Vertex vertex{};
-    if (ai_mesh->HasPositions()) {
+    if (ai_mesh->HasPositions())
+    {
       vertex.a_position.x = ai_mesh->mVertices[i].x;
       vertex.a_position.y = ai_mesh->mVertices[i].y;
       vertex.a_position.z = ai_mesh->mVertices[i].z;
     }
-    if (ai_mesh->HasTextureCoords(0)) {
+    if (ai_mesh->HasTextureCoords(0))
+    {
       vertex.a_texCoord.x = ai_mesh->mTextureCoords[0][i].x;
       vertex.a_texCoord.y = ai_mesh->mTextureCoords[0][i].y;
-    } else {
+    }
+    else
+    {
       vertex.a_texCoord = glm::vec2(0.0f, 0.0f);
     }
-    if (ai_mesh->HasNormals()) {
+    if (ai_mesh->HasNormals())
+    {
       vertex.a_normal.x = ai_mesh->mNormals[i].x;
       vertex.a_normal.y = ai_mesh->mNormals[i].y;
       vertex.a_normal.z = ai_mesh->mNormals[i].z;
     }
-    if (ai_mesh->HasTangentsAndBitangents()) {
+    if (ai_mesh->HasTangentsAndBitangents())
+    {
       vertex.a_tangent.x = ai_mesh->mTangents[i].x;
       vertex.a_tangent.y = ai_mesh->mTangents[i].y;
       vertex.a_tangent.z = ai_mesh->mTangents[i].z;
     }
     vertexes.push_back(vertex);
   }
-  for (size_t i = 0; i < ai_mesh->mNumFaces; i++) {
+  for (size_t i = 0; i < ai_mesh->mNumFaces; i++)
+  {
     aiFace face = ai_mesh->mFaces[i];
-    if (face.mNumIndices != 3) {
+    if (face.mNumIndices != 3)
+    {
       LOGE("ModelLoader::processMesh, mesh not transformed to triangle mesh.");
       return false;
     }
-    for (size_t j = 0; j < face.mNumIndices; ++j) {
-      indices.push_back((int) (face.mIndices[j]));
+    for (size_t j = 0; j < face.mNumIndices; ++j)
+    {
+      indices.push_back((int)(face.mIndices[j]));
     }
   }
 
   outMesh.material = std::make_shared<Material>();
   outMesh.material->baseColor = glm::vec4(1.f);
-  if (ai_mesh->mMaterialIndex >= 0) {
+  if (ai_mesh->mMaterialIndex >= 0)
+  {
     const aiMaterial *material = ai_scene->mMaterials[ai_mesh->mMaterialIndex];
 
     // alpha mode
     outMesh.material->alphaMode = Alpha_Opaque;
     aiString alphaMode;
-    if (material->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode) == aiReturn_SUCCESS) {
+    if (material->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode) == aiReturn_SUCCESS)
+    {
       // "MASK" not support
-      if (aiString("BLEND") == alphaMode) {
+      if (aiString("BLEND") == alphaMode)
+      {
         outMesh.material->alphaMode = Alpha_Blend;
       }
     }
@@ -318,20 +358,24 @@ bool ModelLoader::processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, Mo
     // double side
     outMesh.material->doubleSided = false;
     bool doubleSide;
-    if (material->Get(AI_MATKEY_TWOSIDED, doubleSide) == aiReturn_SUCCESS) {
+    if (material->Get(AI_MATKEY_TWOSIDED, doubleSide) == aiReturn_SUCCESS)
+    {
       outMesh.material->doubleSided = doubleSide;
     }
 
     // shading mode
-    outMesh.material->shadingModel = Shading_BlinnPhong;  // default
+    outMesh.material->shadingModel = Shading_BlinnPhong; // default
     aiShadingMode shading_mode;
-    if (material->Get(AI_MATKEY_SHADING_MODEL, shading_mode) == aiReturn_SUCCESS) {
-      if (aiShadingMode_PBR_BRDF == shading_mode) {
+    if (material->Get(AI_MATKEY_SHADING_MODEL, shading_mode) == aiReturn_SUCCESS)
+    {
+      if (aiShadingMode_PBR_BRDF == shading_mode)
+      {
         outMesh.material->shadingModel = Shading_PBR;
       }
     }
 
-    for (int i = 0; i <= AI_TEXTURE_TYPE_MAX; i++) {
+    for (int i = 0; i <= AI_TEXTURE_TYPE_MAX; i++)
+    {
       processMaterial(material, static_cast<aiTextureType>(i), *outMesh.material);
     }
   }
@@ -346,48 +390,42 @@ bool ModelLoader::processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, Mo
   return true;
 }
 
-void ModelLoader::processMaterial(const aiMaterial *ai_material,
-                                  aiTextureType textureType,
-                                  Material &material) {
-  if (ai_material->GetTextureCount(textureType) <= 0) {
+void ModelLoader::processMaterial(const aiMaterial *ai_material, aiTextureType textureType,
+                                  Material &material)
+{
+  if (ai_material->GetTextureCount(textureType) <= 0)
+  {
     return;
   }
-  for (size_t i = 0; i < ai_material->GetTextureCount(textureType); i++) {
-    aiTextureMapMode texMapMode[2];  // [u, v]
+  for (size_t i = 0; i < ai_material->GetTextureCount(textureType); i++)
+  {
+    aiTextureMapMode texMapMode[2]; // [u, v]
     aiString texPath;
-    aiReturn retStatus = ai_material->GetTexture(textureType, i, &texPath,
-                                                 nullptr, nullptr, nullptr, nullptr,
-                                                 &texMapMode[0]);
-    if (retStatus != aiReturn_SUCCESS || texPath.length == 0) {
+    aiReturn retStatus = ai_material->GetTexture(textureType, i, &texPath, nullptr, nullptr,
+                                                 nullptr, nullptr, &texMapMode[0]);
+    if (retStatus != aiReturn_SUCCESS || texPath.length == 0)
+    {
       LOGW("load texture type=%d, index=%d failed with return value=%d", textureType, i, retStatus);
       continue;
     }
     std::string absolutePath = scene_.model->resourcePath + "/" + texPath.C_Str();
     MaterialTexType texType = MaterialTexType_NONE;
-    switch (textureType) {
-      case aiTextureType_BASE_COLOR:
-      case aiTextureType_DIFFUSE:
-        texType = MaterialTexType_ALBEDO;
-        break;
-      case aiTextureType_NORMALS:
-        texType = MaterialTexType_NORMAL;
-        break;
-      case aiTextureType_EMISSIVE:
-        texType = MaterialTexType_EMISSIVE;
-        break;
-      case aiTextureType_LIGHTMAP:
-        texType = MaterialTexType_AMBIENT_OCCLUSION;
-        break;
-      case aiTextureType_UNKNOWN:
-        texType = MaterialTexType_METAL_ROUGHNESS;
-        break;
-      default:
-//        LOGW("texture type: %s not support", aiTextureTypeToString(textureType));
-        continue;  // not support
+    switch (textureType)
+    {
+    case aiTextureType_BASE_COLOR:
+    case aiTextureType_DIFFUSE: texType = MaterialTexType_ALBEDO; break;
+    case aiTextureType_NORMALS: texType = MaterialTexType_NORMAL; break;
+    case aiTextureType_EMISSIVE: texType = MaterialTexType_EMISSIVE; break;
+    case aiTextureType_LIGHTMAP: texType = MaterialTexType_AMBIENT_OCCLUSION; break;
+    case aiTextureType_UNKNOWN: texType = MaterialTexType_METAL_ROUGHNESS; break;
+    default:
+      //        LOGW("texture type: %s not support", aiTextureTypeToString(textureType));
+      continue; // not support
     }
 
     auto buffer = loadTextureFile(absolutePath);
-    if (buffer) {
+    if (buffer)
+    {
       auto &texData = material.textureData[texType];
       texData.tag = absolutePath;
       texData.width = buffer->getWidth();
@@ -395,50 +433,52 @@ void ModelLoader::processMaterial(const aiMaterial *ai_material,
       texData.data = {buffer};
       texData.wrapModeU = convertTexWrapMode(texMapMode[0]);
       texData.wrapModeV = convertTexWrapMode(texMapMode[1]);
-    } else {
-      LOGE("load texture failed: %s, path: %s", Material::materialTexTypeStr(texType), absolutePath.c_str());
+    }
+    else
+    {
+      LOGE("load texture failed: %s, path: %s", Material::materialTexTypeStr(texType),
+           absolutePath.c_str());
     }
   }
 }
 
-glm::mat4 ModelLoader::convertMatrix(const aiMatrix4x4 &m) {
+glm::mat4 ModelLoader::convertMatrix(const aiMatrix4x4 &m)
+{
   glm::mat4 ret;
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
       ret[j][i] = m[i][j];
     }
   }
   return ret;
 }
 
-BoundingBox ModelLoader::convertBoundingBox(const aiAABB &aabb) {
+BoundingBox ModelLoader::convertBoundingBox(const aiAABB &aabb)
+{
   BoundingBox ret{};
   ret.min = glm::vec3(aabb.mMin.x, aabb.mMin.y, aabb.mMin.z);
   ret.max = glm::vec3(aabb.mMax.x, aabb.mMax.y, aabb.mMax.z);
   return ret;
 }
 
-WrapMode ModelLoader::convertTexWrapMode(const aiTextureMapMode &mode) {
+WrapMode ModelLoader::convertTexWrapMode(const aiTextureMapMode &mode)
+{
   WrapMode retWrapMode;
-  switch (mode) {
-    case aiTextureMapMode_Wrap:
-      retWrapMode = Wrap_REPEAT;
-      break;
-    case aiTextureMapMode_Clamp:
-      retWrapMode = Wrap_CLAMP_TO_EDGE;
-      break;
-    case aiTextureMapMode_Mirror:
-      retWrapMode = Wrap_MIRRORED_REPEAT;
-      break;
-    default:
-      retWrapMode = Wrap_REPEAT;
-      break;
+  switch (mode)
+  {
+  case aiTextureMapMode_Wrap: retWrapMode = Wrap_REPEAT; break;
+  case aiTextureMapMode_Clamp: retWrapMode = Wrap_CLAMP_TO_EDGE; break;
+  case aiTextureMapMode_Mirror: retWrapMode = Wrap_MIRRORED_REPEAT; break;
+  default: retWrapMode = Wrap_REPEAT; break;
   }
 
   return retWrapMode;
 }
 
-glm::mat4 ModelLoader::adjustModelCenter(BoundingBox &bounds) {
+glm::mat4 ModelLoader::adjustModelCenter(BoundingBox &bounds)
+{
   glm::mat4 modelTransform(1.0f);
   glm::vec3 trans = (bounds.max + bounds.min) / -2.f;
   trans.y = -bounds.min.y;
@@ -448,38 +488,45 @@ glm::mat4 ModelLoader::adjustModelCenter(BoundingBox &bounds) {
   return modelTransform;
 }
 
-void ModelLoader::preloadTextureFiles(const aiScene *scene, const std::string &resDir) {
+void ModelLoader::preloadTextureFiles(const aiScene *scene, const std::string &resDir)
+{
   std::set<std::string> texPaths;
-  for (int materialIdx = 0; materialIdx < scene->mNumMaterials; materialIdx++) {
+  for (int materialIdx = 0; materialIdx < scene->mNumMaterials; materialIdx++)
+  {
     aiMaterial *material = scene->mMaterials[materialIdx];
-    for (int texType = aiTextureType_NONE; texType <= AI_TEXTURE_TYPE_MAX; texType++) {
+    for (int texType = aiTextureType_NONE; texType <= AI_TEXTURE_TYPE_MAX; texType++)
+    {
       auto textureType = static_cast<aiTextureType>(texType);
       size_t texCnt = material->GetTextureCount(textureType);
-      for (size_t i = 0; i < texCnt; i++) {
+      for (size_t i = 0; i < texCnt; i++)
+      {
         aiString textPath;
         aiReturn retStatus = material->GetTexture(textureType, i, &textPath);
-        if (retStatus != aiReturn_SUCCESS || textPath.length == 0) {
+        if (retStatus != aiReturn_SUCCESS || textPath.length == 0)
+        {
           continue;
         }
         texPaths.insert(resDir + "/" + textPath.C_Str());
       }
     }
   }
-  if (texPaths.empty()) {
+  if (texPaths.empty())
+  {
     return;
   }
 
-  ThreadPool pool(std::min(texPaths.size(), (size_t) std::thread::hardware_concurrency()));
-  for (auto &path : texPaths) {
-    pool.pushTask([&](int thread_id) {
-      loadTextureFile(path);
-    });
+  ThreadPool pool(std::min(texPaths.size(), (size_t)std::thread::hardware_concurrency()));
+  for (auto &path : texPaths)
+  {
+    pool.pushTask([&](int thread_id) { loadTextureFile(path); });
   }
 }
 
-std::shared_ptr<Buffer<RGBA>> ModelLoader::loadTextureFile(const std::string &path) {
+std::shared_ptr<Buffer<RGBA>> ModelLoader::loadTextureFile(const std::string &path)
+{
   texCacheMutex_.lock();
-  if (textureDataCache_.find(path) != textureDataCache_.end()) {
+  if (textureDataCache_.find(path) != textureDataCache_.end())
+  {
     auto &buffer = textureDataCache_[path];
     texCacheMutex_.unlock();
     return buffer;
@@ -489,7 +536,8 @@ std::shared_ptr<Buffer<RGBA>> ModelLoader::loadTextureFile(const std::string &pa
   LOGD("load texture, path: %s", path.c_str());
 
   auto buffer = ImageUtils::readImageRGBA(path);
-  if (buffer == nullptr) {
+  if (buffer == nullptr)
+  {
     LOGD("load texture failed, path: %s", path.c_str());
     return nullptr;
   }
@@ -501,5 +549,5 @@ std::shared_ptr<Buffer<RGBA>> ModelLoader::loadTextureFile(const std::string &pa
   return buffer;
 }
 
-}
-}
+} // namespace View
+} // namespace SoftGL

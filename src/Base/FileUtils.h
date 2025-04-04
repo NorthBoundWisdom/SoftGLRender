@@ -6,29 +6,36 @@
 
 #pragma once
 
-#include "Logger.h"
 #include <fstream>
 #include <vector>
 
-namespace SoftGL {
+#include "Logger.h"
 
-class FileUtils {
-public:
-  static bool exists(const std::string &path) {
+namespace SoftGL
+{
+
+class FileUtils
+{
+  public:
+  static bool exists(const std::string &path)
+  {
     std::ifstream file(path);
     return file.good();
   }
 
-  static std::vector<uint8_t> readBytes(const std::string &path) {
+  static std::vector<uint8_t> readBytes(const std::string &path)
+  {
     std::vector<uint8_t> ret;
     std::ifstream file(path, std::ios::in | std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
       LOGE("failed to open file: %s", path.c_str());
       return ret;
     }
 
     size_t size = file.tellg();
-    if (size <= 0) {
+    if (size <= 0)
+    {
       LOGE("failed to read file, invalid size: %d", size);
       return ret;
     }
@@ -41,19 +48,22 @@ public:
     return ret;
   }
 
-  static std::string readText(const std::string &path) {
+  static std::string readText(const std::string &path)
+  {
     auto data = readBytes(path);
-    if (data.empty()) {
+    if (data.empty())
+    {
       return "";
     }
 
     return {(char *)data.data(), data.size()};
   }
 
-  static bool writeBytes(const std::string &path, const char *data,
-                         size_t length) {
+  static bool writeBytes(const std::string &path, const char *data, size_t length)
+  {
     std::ofstream file(path, std::ios::out | std::ios::binary);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
       LOGE("failed to open file: %s", path.c_str());
       return false;
     }
@@ -62,9 +72,11 @@ public:
     return true;
   }
 
-  static bool writeText(const std::string &path, const std::string &str) {
+  static bool writeText(const std::string &path, const std::string &str)
+  {
     std::ofstream file(path, std::ios::out);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
       LOGE("failed to open file: %s", path.c_str());
       return false;
     }

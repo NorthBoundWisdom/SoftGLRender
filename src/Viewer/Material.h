@@ -6,22 +6,27 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
+
 #include "Render/PipelineStates.h"
+#include "Render/ShaderProgram.h"
 #include "Render/Texture.h"
 #include "Render/Uniform.h"
-#include "Render/ShaderProgram.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-enum AlphaMode {
+enum AlphaMode
+{
   Alpha_Opaque,
   Alpha_Blend,
 };
 
-enum ShadingModel {
+enum ShadingModel
+{
   Shading_Unknown = 0,
   Shading_BaseColor,
   Shading_BlinnPhong,
@@ -32,7 +37,8 @@ enum ShadingModel {
   Shading_FXAA,
 };
 
-enum MaterialTexType {
+enum MaterialTexType
+{
   MaterialTexType_NONE = 0,
 
   MaterialTexType_ALBEDO,
@@ -52,7 +58,8 @@ enum MaterialTexType {
   MaterialTexType_SHADOWMAP,
 };
 
-enum UniformBlockType {
+enum UniformBlockType
+{
   UniformBlock_Scene,
   UniformBlock_Model,
   UniformBlock_Material,
@@ -60,14 +67,16 @@ enum UniformBlockType {
   UniformBlock_IBLPrefilter,
 };
 
-struct UniformsScene {
+struct UniformsScene
+{
   glm::vec3 u_ambientColor;
   glm::vec3 u_cameraPosition;
   glm::vec3 u_pointLightPosition;
   glm::vec3 u_pointLightColor;
 };
 
-struct UniformsModel {
+struct UniformsModel
+{
   glm::uint32_t u_reverseZ;
   glm::mat4 u_modelMatrix;
   glm::mat4 u_modelViewProjectionMatrix;
@@ -75,7 +84,8 @@ struct UniformsModel {
   glm::mat4 u_shadowMVPMatrix;
 };
 
-struct UniformsMaterial {
+struct UniformsMaterial
+{
   glm::uint32_t u_enableLight;
   glm::uint32_t u_enableIBL;
   glm::uint32_t u_enableShadow;
@@ -85,16 +95,19 @@ struct UniformsMaterial {
   glm::vec4 u_baseColor;
 };
 
-struct UniformsQuadFilter {
+struct UniformsQuadFilter
+{
   glm::vec2 u_screenSize;
 };
 
-struct UniformsIBLPrefilter {
+struct UniformsIBLPrefilter
+{
   glm::float32_t u_srcResolution;
   glm::float32_t u_roughness;
 };
 
-struct TextureData {
+struct TextureData
+{
   std::string tag;
   size_t width = 0;
   size_t height = 0;
@@ -104,23 +117,26 @@ struct TextureData {
   WrapMode wrapModeW = Wrap_REPEAT;
 };
 
-class MaterialObject {
- public:
+class MaterialObject
+{
+  public:
   ShadingModel shadingModel = Shading_Unknown;
   std::shared_ptr<PipelineStates> pipelineStates;
   std::shared_ptr<ShaderProgram> shaderProgram;
   std::shared_ptr<ShaderResources> shaderResources;
 };
 
-class Material {
- public:
+class Material
+{
+  public:
   static const char *shadingModelStr(ShadingModel model);
   static const char *materialTexTypeStr(MaterialTexType usage);
   static const char *samplerDefine(MaterialTexType usage);
   static const char *samplerName(MaterialTexType usage);
 
- public:
-  virtual void reset() {
+  public:
+  virtual void reset()
+  {
     shadingModel = Shading_Unknown;
     doubleSided = false;
     alphaMode = Alpha_Opaque;
@@ -136,13 +152,14 @@ class Material {
     materialObj = nullptr;
   }
 
-  virtual void resetStates() {
+  virtual void resetStates()
+  {
     textures.clear();
     shaderDefines.clear();
     materialObj = nullptr;
   }
 
- public:
+  public:
   ShadingModel shadingModel = Shading_Unknown;
   bool doubleSided = false;
   AlphaMode alphaMode = Alpha_Opaque;
@@ -158,16 +175,18 @@ class Material {
   std::shared_ptr<MaterialObject> materialObj = nullptr;
 };
 
-class SkyboxMaterial : public Material {
- public:
-  void resetStates() override {
+class SkyboxMaterial : public Material
+{
+  public:
+  void resetStates() override
+  {
     Material::resetStates();
     iblReady = false;
   }
 
- public:
+  public:
   bool iblReady = false;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

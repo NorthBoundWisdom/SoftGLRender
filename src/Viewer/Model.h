@@ -11,20 +11,24 @@
 #include <unordered_map>
 
 #include "Base/Geometry.h"
-#include "Render/Vertex.h"
 #include "Material.h"
+#include "Render/Vertex.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-struct Vertex {
+struct Vertex
+{
   glm::vec3 a_position;
   glm::vec2 a_texCoord;
   glm::vec3 a_normal;
   glm::vec3 a_tangent;
 };
 
-struct ModelVertexes : VertexArray {
+struct ModelVertexes : VertexArray
+{
   PrimitiveType primitiveType;
   size_t primitiveCnt = 0;
   std::vector<Vertex> vertexes;
@@ -32,13 +36,16 @@ struct ModelVertexes : VertexArray {
 
   std::shared_ptr<VertexArrayObject> vao = nullptr;
 
-  void UpdateVertexes() const {
-    if (vao) {
+  void UpdateVertexes() const
+  {
+    if (vao)
+    {
       vao->updateVertexData(vertexesBuffer, vertexesBufferLength);
     }
   };
 
-  void InitVertexes() {
+  void InitVertexes()
+  {
     vertexSize = sizeof(Vertex);
 
     vertexesDesc.resize(4);
@@ -47,7 +54,7 @@ struct ModelVertexes : VertexArray {
     vertexesDesc[2] = {3, sizeof(Vertex), offsetof(Vertex, a_normal)};
     vertexesDesc[3] = {3, sizeof(Vertex), offsetof(Vertex, a_tangent)};
 
-    vertexesBuffer = vertexes.empty() ? nullptr : (uint8_t *) &vertexes[0];
+    vertexesBuffer = vertexes.empty() ? nullptr : (uint8_t *)&vertexes[0];
     vertexesBufferLength = vertexes.size() * sizeof(Vertex);
 
     indexBuffer = indices.empty() ? nullptr : &indices[0];
@@ -55,34 +62,42 @@ struct ModelVertexes : VertexArray {
   }
 };
 
-struct ModelBase : ModelVertexes {
+struct ModelBase : ModelVertexes
+{
   BoundingBox aabb{};
   std::shared_ptr<Material> material = nullptr;
 
-  virtual void resetStates() {
+  virtual void resetStates()
+  {
     vao = nullptr;
-    if (material) {
+    if (material)
+    {
       material->resetStates();
     }
   }
 };
 
-struct ModelPoints : ModelBase {
+struct ModelPoints : ModelBase
+{
 };
 
-struct ModelLines : ModelBase {
+struct ModelLines : ModelBase
+{
 };
 
-struct ModelMesh : ModelBase {
+struct ModelMesh : ModelBase
+{
 };
 
-struct ModelNode {
+struct ModelNode
+{
   glm::mat4 transform = glm::mat4(1.f);
   std::vector<ModelMesh> meshes;
   std::vector<ModelNode> children;
 };
 
-struct Model {
+struct Model
+{
   std::string resourcePath;
 
   ModelNode rootNode;
@@ -94,29 +109,38 @@ struct Model {
 
   glm::mat4 centeredTransform;
 
-  void resetStates() {
+  void resetStates()
+  {
     resetNodeStates(rootNode);
   }
 
-  void resetNodeStates(ModelNode &node) {
-    for (auto &mesh : node.meshes) {
+  void resetNodeStates(ModelNode &node)
+  {
+    for (auto &mesh : node.meshes)
+    {
       mesh.resetStates();
     }
-    for (auto &childNode : node.children) {
+    for (auto &childNode : node.children)
+    {
       resetNodeStates(childNode);
     }
   }
 };
 
-struct DemoScene {
+struct DemoScene
+{
   std::shared_ptr<Model> model;
   ModelLines worldAxis;
   ModelPoints pointLight;
   ModelMesh floor;
   ModelMesh skybox;
 
-  void resetStates() {
-    if (model) { model->resetStates(); }
+  void resetStates()
+  {
+    if (model)
+    {
+      model->resetStates();
+    }
     worldAxis.resetStates();
     pointLight.resetStates();
     floor.resetStates();
@@ -124,5 +148,5 @@ struct DemoScene {
   }
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

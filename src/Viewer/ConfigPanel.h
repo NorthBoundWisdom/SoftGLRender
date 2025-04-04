@@ -6,18 +6,28 @@
 
 #pragma once
 
-#include <vector>
 #include <functional>
 #include <unordered_map>
+#include <vector>
+
 #include "Config.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-class ConfigPanel {
- public:
-  explicit ConfigPanel(Config &config) : config_(config) {}
-  ~ConfigPanel() { destroy(); };
+class ConfigPanel
+{
+  public:
+  explicit ConfigPanel(Config &config)
+    : config_(config)
+  {
+  }
+  ~ConfigPanel()
+  {
+    destroy();
+  };
 
   bool init(void *window, int width, int height);
   void onDraw();
@@ -28,29 +38,36 @@ class ConfigPanel {
   bool wantCaptureKeyboard();
   bool wantCaptureMouse();
 
-  inline void setReloadModelFunc(const std::function<bool(const std::string &)> &func) {
+  inline void setReloadModelFunc(const std::function<bool(const std::string &)> &func)
+  {
     reloadModelFunc_ = func;
   }
-  inline void setReloadSkyboxFunc(const std::function<bool(const std::string &)> &func) {
+  inline void setReloadSkyboxFunc(const std::function<bool(const std::string &)> &func)
+  {
     reloadSkyboxFunc_ = func;
   }
-  inline void setUpdateLightFunc(const std::function<void(glm::vec3 &, glm::vec3 &)> &func) {
+  inline void setUpdateLightFunc(const std::function<void(glm::vec3 &, glm::vec3 &)> &func)
+  {
     updateLightFunc_ = func;
   }
-  inline void setResetCameraFunc(const std::function<void(void)> &func) {
+  inline void setResetCameraFunc(const std::function<void(void)> &func)
+  {
     resetCameraFunc_ = func;
   }
-  inline void setResetMipmapsFunc(const std::function<void(void)> &func) {
+  inline void setResetMipmapsFunc(const std::function<void(void)> &func)
+  {
     resetMipmapsFunc_ = func;
   }
-  inline void setResetReverseZFunc(const std::function<void(void)> &func) {
+  inline void setResetReverseZFunc(const std::function<void(void)> &func)
+  {
     resetReverseZFunc_ = func;
   }
-  inline void setFrameDumpFunc(const std::function<void(void)> &func) {
+  inline void setFrameDumpFunc(const std::function<void(void)> &func)
+  {
     frameDumpFunc_ = func;
   }
 
- private:
+  private:
   bool loadConfig();
 
   bool reloadModel(const std::string &name);
@@ -59,7 +76,7 @@ class ConfigPanel {
   void drawSettings();
   void destroy();
 
- private:
+  private:
   Config &config_;
 
   int frameWidth_ = 0;
@@ -82,5 +99,5 @@ class ConfigPanel {
   std::function<void(void)> frameDumpFunc_;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

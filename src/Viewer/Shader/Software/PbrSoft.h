@@ -8,10 +8,13 @@
 
 #include "Render/Software/ShaderProgramSoft.h"
 
-namespace SoftGL {
-namespace ShaderPbrIBL {
+namespace SoftGL
+{
+namespace ShaderPbrIBL
+{
 
-struct ShaderDefines {
+struct ShaderDefines
+{
   uint8_t ALBEDO_MAP;
   uint8_t NORMAL_MAP;
   uint8_t EMISSIVE_MAP;
@@ -19,14 +22,16 @@ struct ShaderDefines {
   uint8_t METALROUGHNESS_MAP;
 };
 
-struct ShaderAttributes {
+struct ShaderAttributes
+{
   glm::vec3 a_position;
   glm::vec2 a_texCoord;
   glm::vec3 a_normal;
   glm::vec3 a_tangent;
 };
 
-struct ShaderUniforms {
+struct ShaderUniforms
+{
   // UniformsModel
   glm::int32_t u_reverseZ;
   glm::mat4 u_modelMatrix;
@@ -60,7 +65,8 @@ struct ShaderUniforms {
   SamplerCubeSoft<RGBA> *u_prefilterMap;
 };
 
-struct ShaderVaryings {
+struct ShaderVaryings
+{
   glm::vec2 v_texCoord;
   glm::vec3 v_normalVector;
   glm::vec3 v_worldPos;
@@ -71,43 +77,44 @@ struct ShaderVaryings {
   glm::vec3 v_tangent;
 };
 
-class ShaderPbrIBL : public ShaderSoft {
- public:
+class ShaderPbrIBL : public ShaderSoft
+{
+  public:
   CREATE_SHADER_OVERRIDE
 
-  std::vector<std::string> &getDefines() override {
+  std::vector<std::string> &getDefines() override
+  {
     static std::vector<std::string> defines = {
-        "ALBEDO_MAP",
-        "NORMAL_MAP",
-        "EMISSIVE_MAP",
-        "AO_MAP",
-        "METALROUGHNESS_MAP",
+      "ALBEDO_MAP", "NORMAL_MAP", "EMISSIVE_MAP", "AO_MAP", "METALROUGHNESS_MAP",
     };
     return defines;
   }
 
-  std::vector<UniformDesc> &getUniformsDesc() override {
+  std::vector<UniformDesc> &getUniformsDesc() override
+  {
     static std::vector<UniformDesc> desc = {
-        {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
-        {"UniformsScene", offsetof(ShaderUniforms, u_ambientColor)},
-        {"UniformsMaterial", offsetof(ShaderUniforms, u_enableLight)},
-        {"u_albedoMap", offsetof(ShaderUniforms, u_albedoMap)},
-        {"u_normalMap", offsetof(ShaderUniforms, u_normalMap)},
-        {"u_emissiveMap", offsetof(ShaderUniforms, u_emissiveMap)},
-        {"u_aoMap", offsetof(ShaderUniforms, u_aoMap)},
-        {"u_metalRoughnessMap", offsetof(ShaderUniforms, u_metalRoughnessMap)},
-        {"u_irradianceMap", offsetof(ShaderUniforms, u_irradianceMap)},
-        {"u_prefilterMap", offsetof(ShaderUniforms, u_prefilterMap)},
+      {"UniformsModel", offsetof(ShaderUniforms, u_reverseZ)},
+      {"UniformsScene", offsetof(ShaderUniforms, u_ambientColor)},
+      {"UniformsMaterial", offsetof(ShaderUniforms, u_enableLight)},
+      {"u_albedoMap", offsetof(ShaderUniforms, u_albedoMap)},
+      {"u_normalMap", offsetof(ShaderUniforms, u_normalMap)},
+      {"u_emissiveMap", offsetof(ShaderUniforms, u_emissiveMap)},
+      {"u_aoMap", offsetof(ShaderUniforms, u_aoMap)},
+      {"u_metalRoughnessMap", offsetof(ShaderUniforms, u_metalRoughnessMap)},
+      {"u_irradianceMap", offsetof(ShaderUniforms, u_irradianceMap)},
+      {"u_prefilterMap", offsetof(ShaderUniforms, u_prefilterMap)},
     };
     return desc;
   };
 };
 
-class VS : public ShaderPbrIBL {
- public:
+class VS : public ShaderPbrIBL
+{
+  public:
   CREATE_SHADER_CLONE(VS)
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     glm::vec4 position = glm::vec4(a->a_position, 1.0);
     gl->Position = u->u_modelViewProjectionMatrix * position;
     v->v_texCoord = a->a_texCoord;
@@ -118,7 +125,8 @@ class VS : public ShaderPbrIBL {
     v->v_lightDirection = u->u_pointLightPosition - v->v_worldPos;
     v->v_cameraDirection = u->u_cameraPosition - v->v_worldPos;
 
-    if (def->NORMAL_MAP) {
+    if (def->NORMAL_MAP)
+    {
       glm::vec3 N = glm::normalize(u->u_inverseTransposeModelMatrix * a->a_normal);
       glm::vec3 T = glm::normalize(u->u_inverseTransposeModelMatrix * a->a_tangent);
       v->v_normal = N;
@@ -127,31 +135,40 @@ class VS : public ShaderPbrIBL {
   }
 };
 
-class FS : public ShaderPbrIBL {
- public:
+class FS : public ShaderPbrIBL
+{
+  public:
   CREATE_SHADER_CLONE(FS)
 
-  size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override {
+  size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override
+  {
     return offsetof(ShaderVaryings, v_texCoord);
   }
 
-  void setupSamplerDerivative() override {
-    if (def->ALBEDO_MAP) {
+  void setupSamplerDerivative() override
+  {
+    if (def->ALBEDO_MAP)
+    {
       u->u_albedoMap->setLodFunc(&texLodFunc);
     }
-    if (def->NORMAL_MAP) {
+    if (def->NORMAL_MAP)
+    {
       u->u_normalMap->setLodFunc(&texLodFunc);
     }
-    if (def->EMISSIVE_MAP) {
+    if (def->EMISSIVE_MAP)
+    {
       u->u_emissiveMap->setLodFunc(&texLodFunc);
     }
-    if (def->AO_MAP) {
+    if (def->AO_MAP)
+    {
       u->u_aoMap->setLodFunc(&texLodFunc);
     }
   }
 
-  glm::vec3 GetNormalFromMap() {
-    if (def->NORMAL_MAP) {
+  glm::vec3 GetNormalFromMap()
+  {
+    if (def->NORMAL_MAP)
+    {
       glm::vec3 N = glm::normalize(v->v_normal);
       glm::vec3 T = glm::normalize(v->v_tangent);
       T = glm::normalize(T - glm::dot(T, N) * N);
@@ -160,12 +177,15 @@ class FS : public ShaderPbrIBL {
 
       glm::vec3 tangentNormal = glm::vec3(texture(u->u_normalMap, v->v_texCoord)) * 2.0f - 1.0f;
       return glm::normalize(TBN * tangentNormal);
-    } else {
+    }
+    else
+    {
       return glm::normalize(v->v_normalVector);
     }
   }
 
-  static float DistributionGGX(glm::vec3 N, glm::vec3 H, float roughness) {
+  static float DistributionGGX(glm::vec3 N, glm::vec3 H, float roughness)
+  {
     float a = roughness * roughness;
     float a2 = a * a;
     float NdotH = glm::max(glm::dot(N, H), 0.0f);
@@ -178,7 +198,8 @@ class FS : public ShaderPbrIBL {
     return nom / denom;
   }
 
-  static float GeometrySchlickGGX(float NdotV, float roughness) {
+  static float GeometrySchlickGGX(float NdotV, float roughness)
+  {
     float r = (roughness + 1.0f);
     float k = (r * r) / 8.0f;
 
@@ -188,7 +209,8 @@ class FS : public ShaderPbrIBL {
     return nom / denom;
   }
 
-  static float GeometrySmith(glm::vec3 N, glm::vec3 V, glm::vec3 L, float roughness) {
+  static float GeometrySmith(glm::vec3 N, glm::vec3 V, glm::vec3 L, float roughness)
+  {
     float NdotV = glm::max(glm::dot(N, V), 0.0f);
     float NdotL = glm::max(glm::dot(N, L), 0.0f);
     float ggx2 = GeometrySchlickGGX(NdotV, roughness);
@@ -197,16 +219,19 @@ class FS : public ShaderPbrIBL {
     return ggx1 * ggx2;
   }
 
-  static glm::vec3 FresnelSchlick(float cosTheta, glm::vec3 F0) {
+  static glm::vec3 FresnelSchlick(float cosTheta, glm::vec3 F0)
+  {
     return F0 + (1.0f - F0) * glm::pow(glm::clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
   }
 
-  static glm::vec3 FresnelSchlickRoughness(float cosTheta, glm::vec3 F0, float roughness) {
-    return F0
-        + (glm::max(glm::vec3(1.0f - roughness), F0) - F0) * glm::pow(glm::clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+  static glm::vec3 FresnelSchlickRoughness(float cosTheta, glm::vec3 F0, float roughness)
+  {
+    return F0 + (glm::max(glm::vec3(1.0f - roughness), F0) - F0) *
+                  glm::pow(glm::clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
   }
 
-  static glm::vec3 EnvBRDFApprox(glm::vec3 SpecularColor, float Roughness, float NdotV) {
+  static glm::vec3 EnvBRDFApprox(glm::vec3 SpecularColor, float Roughness, float NdotV)
+  {
     // [ Lazarov 2013, "Getting More Physical in Call of Duty: Black Ops II" ]
     // Adaptation to fit our G term.
     const glm::vec4 c0 = glm::vec4(-1, -0.0275, -0.572, 0.022);
@@ -222,13 +247,17 @@ class FS : public ShaderPbrIBL {
     return SpecularColor * AB.x + AB.y;
   }
 
-  void shaderMain() override {
+  void shaderMain() override
+  {
     float pointLightRangeInverse = 1.0f / 5.f;
 
     glm::vec4 albedo_rgba;
-    if (def->ALBEDO_MAP) {
+    if (def->ALBEDO_MAP)
+    {
       albedo_rgba = texture(u->u_albedoMap, v->v_texCoord);
-    } else {
+    }
+    else
+    {
       albedo_rgba = u->u_baseColor;
     }
 
@@ -236,14 +265,16 @@ class FS : public ShaderPbrIBL {
 
     float metallic = 0.0f;
     float roughness = 1.0f;
-    if (def->METALROUGHNESS_MAP) {
+    if (def->METALROUGHNESS_MAP)
+    {
       glm::vec4 metalRoughness = texture(u->u_metalRoughnessMap, v->v_texCoord);
       metallic = metalRoughness.b;
       roughness = metalRoughness.g;
     }
 
     float ao = 1.f;
-    if (def->AO_MAP) {
+    if (def->AO_MAP)
+    {
       ao = texture(u->u_aoMap, v->v_texCoord).r;
     }
 
@@ -258,7 +289,8 @@ class FS : public ShaderPbrIBL {
     glm::vec3 Lo = glm::vec3(0.0f);
 
     // Light begin ---------------------------------------------------------------
-    if (u->u_enableLight) {
+    if (u->u_enableLight)
+    {
       // calculate per-light radiance
       glm::vec3 L = glm::normalize(v->v_lightDirection);
       glm::vec3 H = glm::normalize(V + L);
@@ -274,7 +306,8 @@ class FS : public ShaderPbrIBL {
 
       glm::vec3 numerator = NDF * G * F;
       // + 0.0001 to prevent divide by zero
-      float denominator = 4.0f * glm::max(glm::dot(N, V), 0.0f) * glm::max(glm::dot(N, L), 0.0f) + 0.0001f;
+      float denominator =
+        4.0f * glm::max(glm::dot(N, V), 0.0f) * glm::max(glm::dot(N, L), 0.0f) + 0.0001f;
       glm::vec3 specular = numerator / denominator;
 
       glm::vec3 kS = F;
@@ -288,7 +321,8 @@ class FS : public ShaderPbrIBL {
 
     // Ambient begin ---------------------------------------------------------------
     glm::vec3 ambient = glm::vec3(0.f);
-    if (u->u_enableIBL) {
+    if (u->u_enableIBL)
+    {
       glm::vec3 F = FresnelSchlickRoughness(glm::max(glm::dot(N, V), 0.0f), F0, roughness);
 
       glm::vec3 kS = F;
@@ -298,12 +332,17 @@ class FS : public ShaderPbrIBL {
       glm::vec3 irradiance = glm::vec3(texture(u->u_irradianceMap, N));
       glm::vec3 diffuse = irradiance * albedo;
 
-      // sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
+      // sample both the pre-filter map and the BRDF lut and combine them together as per the
+      // Split-Sum approximation to get the IBL specular part.
       const float MAX_REFLECTION_LOD = 4.0f;
-      glm::vec3 prefilteredColor = glm::vec3(textureLod(u->u_prefilterMap, R, roughness * MAX_REFLECTION_LOD));
-      glm::vec3 specular = prefilteredColor * EnvBRDFApprox(F, roughness, glm::max(glm::dot(N, V), 0.0f));
+      glm::vec3 prefilteredColor =
+        glm::vec3(textureLod(u->u_prefilterMap, R, roughness * MAX_REFLECTION_LOD));
+      glm::vec3 specular =
+        prefilteredColor * EnvBRDFApprox(F, roughness, glm::max(glm::dot(N, V), 0.0f));
       ambient = (kD * diffuse + specular) * ao;
-    } else {
+    }
+    else
+    {
       ambient = u->u_ambientColor * albedo * ao;
     }
     // Ambient end ---------------------------------------------------------------
@@ -314,7 +353,8 @@ class FS : public ShaderPbrIBL {
 
     // emissive
     glm::vec3 emissive = glm::vec3(0.f);
-    if (def->EMISSIVE_MAP) {
+    if (def->EMISSIVE_MAP)
+    {
       emissive = glm::vec3(texture(u->u_emissiveMap, v->v_texCoord));
     }
 
@@ -322,5 +362,5 @@ class FS : public ShaderPbrIBL {
   }
 };
 
-}
-}
+} // namespace ShaderPbrIBL
+} // namespace SoftGL

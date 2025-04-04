@@ -7,13 +7,17 @@
 #pragma once
 
 #include <memory>
+
 #include "Camera.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-class OrbitController {
- public:
+class OrbitController
+{
+  public:
   explicit OrbitController(Camera &camera);
 
   void update();
@@ -26,7 +30,7 @@ class OrbitController {
 
   void reset();
 
- private:
+  private:
   Camera &camera_;
 
   glm::vec3 eye_{};
@@ -41,31 +45,42 @@ class OrbitController {
   float rotateSensitivity_ = 0.2f;
 };
 
-class SmoothOrbitController {
- public:
+class SmoothOrbitController
+{
+  public:
   explicit SmoothOrbitController(std::shared_ptr<OrbitController> orbit_controller)
-      : orbitController_(std::move(orbit_controller)) {}
+    : orbitController_(std::move(orbit_controller))
+  {
+  }
 
-  void update() {
-    if (std::abs(zoomX) > motionEps || std::abs(zoomY) > motionEps) {
+  void update()
+  {
+    if (std::abs(zoomX) > motionEps || std::abs(zoomY) > motionEps)
+    {
       zoomX /= motionSensitivity;
       zoomY /= motionSensitivity;
       orbitController_->zoomByPixels(zoomX, zoomY);
-    } else {
+    }
+    else
+    {
       zoomX = 0;
       zoomY = 0;
     }
 
-    if (std::abs(rotateX) > motionEps || std::abs(rotateY) > motionEps) {
+    if (std::abs(rotateX) > motionEps || std::abs(rotateY) > motionEps)
+    {
       rotateX /= motionSensitivity;
       rotateY /= motionSensitivity;
       orbitController_->rotateByPixels(rotateX, rotateY);
-    } else {
+    }
+    else
+    {
       rotateX = 0;
       rotateY = 0;
     }
 
-    if (std::abs(panX) > motionEps || std::abs(panY) > motionEps) {
+    if (std::abs(panX) > motionEps || std::abs(panY) > motionEps)
+    {
       orbitController_->panByPixels(panX, panY);
       panX = 0;
       panY = 0;
@@ -74,7 +89,8 @@ class SmoothOrbitController {
     orbitController_->update();
   }
 
-  inline void reset() {
+  inline void reset()
+  {
     orbitController_->reset();
   }
 
@@ -85,11 +101,11 @@ class SmoothOrbitController {
   double panX = 0;
   double panY = 0;
 
- private:
+  private:
   const double motionEps = 0.001f;
   const double motionSensitivity = 1.2f;
   std::shared_ptr<OrbitController> orbitController_;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

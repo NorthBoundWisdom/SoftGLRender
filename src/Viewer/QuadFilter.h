@@ -6,14 +6,17 @@
 
 #pragma once
 
-#include "Render/Renderer.h"
 #include "Model.h"
+#include "Render/Renderer.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
-class QuadFilter {
- public:
+class QuadFilter
+{
+  public:
   QuadFilter(int width, int height, const std::shared_ptr<Renderer> &renderer,
              const std::function<bool(ShaderProgram &program)> &shaderFunc);
 
@@ -21,7 +24,7 @@ class QuadFilter {
 
   void draw();
 
- private:
+  private:
   int width_ = 0;
   int height_ = 0;
   bool initReady_ = false;
@@ -35,5 +38,5 @@ class QuadFilter {
   std::shared_ptr<UniformSampler> uniformTexIn_;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

@@ -6,23 +6,29 @@
 
 #pragma once
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-template<typename T>
-class UUID {
- public:
-  UUID() : uuid_(uuidCounter_++) {}
+template <typename T>
+class UUID
+{
+  public:
+  UUID()
+    : uuid_(uuidCounter_++)
+  {
+  }
 
-  inline int get() const {
+  inline int get() const
+  {
     return uuid_;
   }
 
- private:
+  private:
   int uuid_ = -1;
   static int uuidCounter_;
 };
 
-template<typename T>
+template <typename T>
 int UUID<T>::uuidCounter_ = 0;
 
-}
+} // namespace SoftGL

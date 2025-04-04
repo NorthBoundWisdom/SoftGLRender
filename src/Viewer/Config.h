@@ -7,23 +7,28 @@
 #pragma once
 
 #include <string>
+
 #include "Base/GLMInc.h"
 #include "Render/Renderer.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
 const std::string ASSETS_DIR = "./assets/";
 const std::string SHADER_GLSL_DIR = "./shaders/GLSL/";
 
-enum AAType {
+enum AAType
+{
   AAType_NONE,
   AAType_MSAA,
   AAType_FXAA,
 };
 
-class Config {
- public:
+class Config
+{
+  public:
   std::string modelName;
   std::string modelPath;
   std::string skyboxName;
@@ -55,5 +60,5 @@ class Config {
   int rendererType = Renderer_SOFT;
 };
 
-}
-}
+} // namespace View
+} // namespace SoftGL

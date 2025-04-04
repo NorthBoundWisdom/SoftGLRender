@@ -6,12 +6,16 @@
 
 #include "QuadFilter.h"
 
-namespace SoftGL {
-namespace View {
+namespace SoftGL
+{
+namespace View
+{
 
 QuadFilter::QuadFilter(int width, int height, const std::shared_ptr<Renderer> &renderer,
-                       const std::function<bool(ShaderProgram &program)> &shaderFunc) {
-  if (!renderer) {
+                       const std::function<bool(ShaderProgram &program)> &shaderFunc)
+{
+  if (!renderer)
+  {
     LOGE("QuadFilter error: renderer nullptr");
     return;
   }
@@ -44,7 +48,8 @@ QuadFilter::QuadFilter(int width, int height, const std::shared_ptr<Renderer> &r
   // program
   auto program = renderer_->createShaderProgram();
   bool success = shaderFunc(*program);
-  if (!success) {
+  if (!success)
+  {
     LOGE("create shader program failed");
     return;
   }
@@ -65,7 +70,8 @@ QuadFilter::QuadFilter(int width, int height, const std::shared_ptr<Renderer> &r
   uniformTexIn_ = renderer_->createUniformSampler(samplerName, texDesc);
   materialObj->shaderResources->samplers[texType] = uniformTexIn_;
 
-  uniformBlockFilter_ = renderer_->createUniformBlock("UniformsQuadFilter", sizeof(UniformsQuadFilter));
+  uniformBlockFilter_ =
+    renderer_->createUniformBlock("UniformsQuadFilter", sizeof(UniformsQuadFilter));
   uniformBlockFilter_->setData(&uniformFilter_, sizeof(UniformsQuadFilter));
   materialObj->shaderResources->blocks[UniformBlock_QuadFilter] = uniformBlockFilter_;
 
@@ -75,13 +81,16 @@ QuadFilter::QuadFilter(int width, int height, const std::shared_ptr<Renderer> &r
   initReady_ = true;
 }
 
-void QuadFilter::setTextures(std::shared_ptr<Texture> &texIn, std::shared_ptr<Texture> &texOut) {
-  if (width_ != texIn->width || height_ != texIn->height) {
+void QuadFilter::setTextures(std::shared_ptr<Texture> &texIn, std::shared_ptr<Texture> &texOut)
+{
+  if (width_ != texIn->width || height_ != texIn->height)
+  {
     LOGE("setTextures failed, texIn size not match");
     return;
   }
 
-  if (width_ != texOut->width || height_ != texOut->height) {
+  if (width_ != texOut->width || height_ != texOut->height)
+  {
     LOGE("setTextures failed, texOut size not match");
     return;
   }
@@ -93,8 +102,10 @@ void QuadFilter::setTextures(std::shared_ptr<Texture> &texIn, std::shared_ptr<Te
   fbo_->setColorAttachment(texOut, 0);
 }
 
-void QuadFilter::draw() {
-  if (!initReady_) {
+void QuadFilter::draw()
+{
+  if (!initReady_)
+  {
     return;
   }
   auto &materialObj = quadMesh_.material->materialObj;
@@ -111,5 +122,5 @@ void QuadFilter::draw() {
   renderer_->endRenderPass();
 }
 
-}
-}
+} // namespace View
+} // namespace SoftGL

@@ -14,29 +14,34 @@
 #include <queue>
 #include <thread>
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class ThreadPool {
- public:
-
+class ThreadPool
+{
+  public:
   explicit ThreadPool(const size_t threadCnt = std::thread::hardware_concurrency())
-      : threadCnt_(threadCnt),
-        threads_(new std::thread[threadCnt]) {
+    : threadCnt_(threadCnt)
+    , threads_(new std::thread[threadCnt])
+  {
     createThreads();
   }
 
-  ~ThreadPool() {
+  ~ThreadPool()
+  {
     waitTasksFinish();
     running_ = false;
     joinThreads();
   }
 
-  inline size_t getThreadCnt() const {
+  inline size_t getThreadCnt() const
+  {
     return threadCnt_;
   }
 
-  template<typename F>
-  void pushTask(const F &task) {
+  template <typename F>
+  void pushTask(const F &task)
+  {
     tasksCnt_++;
     {
       const std::lock_guard<std::mutex> lock(mutex_);
@@ -44,17 +49,23 @@ class ThreadPool {
     }
   }
 
-  template<typename F, typename... A>
-  void pushTask(const F &task, const A &...args) {
+  template <typename F, typename... A>
+  void pushTask(const F &task, const A &...args)
+  {
     pushTask([task, args...] { task(args...); });
   }
 
-  void waitTasksFinish() const {
-    while (true) {
-      if (!paused) {
+  void waitTasksFinish() const
+  {
+    while (true)
+    {
+      if (!paused)
+      {
         if (tasksCnt_ == 0)
           break;
-      } else {
+      }
+      else
+      {
         if (tasksRunningCnt() == 0)
           break;
       }
@@ -64,52 +75,65 @@ class ThreadPool {
 
   std::atomic<bool> paused{false};
 
- private:
-  void createThreads() {
-    for (size_t i = 0; i < threadCnt_; i++) {
+  private:
+  void createThreads()
+  {
+    for (size_t i = 0; i < threadCnt_; i++)
+    {
       threads_[i] = std::thread(&ThreadPool::taskWorker, this, i);
     }
   }
 
-  void joinThreads() {
-    for (size_t i = 0; i < threadCnt_; i++) {
+  void joinThreads()
+  {
+    for (size_t i = 0; i < threadCnt_; i++)
+    {
       threads_[i].join();
     }
   }
 
-  size_t tasksQueuedCnt() const {
+  size_t tasksQueuedCnt() const
+  {
     const std::lock_guard<std::mutex> lock(mutex_);
     return tasks_.size();
   }
 
-  size_t tasksRunningCnt() const {
+  size_t tasksRunningCnt() const
+  {
     return tasksCnt_ - tasksQueuedCnt();
   }
 
-  bool popTask(std::function<void(size_t)> &task) {
+  bool popTask(std::function<void(size_t)> &task)
+  {
     const std::lock_guard<std::mutex> lock(mutex_);
     if (tasks_.empty())
       return false;
-    else {
+    else
+    {
       task = std::move(tasks_.front());
       tasks_.pop();
       return true;
     }
   }
 
-  void taskWorker(size_t threadId) {
-    while (running_) {
+  void taskWorker(size_t threadId)
+  {
+    while (running_)
+    {
       std::function<void(size_t)> task;
-      if (!paused && popTask(task)) {
+      if (!paused && popTask(task))
+      {
         task(threadId);
         tasksCnt_--;
-      } else {
+      }
+      else
+      {
         std::this_thread::yield();
       }
     }
   }
 
- private:
+  private:
   mutable std::mutex mutex_ = {};
   std::atomic<bool> running_{true};
 
@@ -120,4 +144,4 @@ class ThreadPool {
   std::atomic<size_t> tasksCnt_{0};
 };
 
-}
+} // namespace SoftGL
