@@ -7,30 +7,36 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
 #include "VulkanLoader.h"
 
 #pragma clang diagnostic ignored "-Wc++98-compat-extra-semi"
-#define VMA_VULKAN_VERSION 1002000  // Vulkan 1.2
+#define VMA_VULKAN_VERSION 1002000 // Vulkan 1.2
 #include "vk_mem_alloc.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-struct QueueFamilyIndices {
+struct QueueFamilyIndices
+{
   int32_t graphicsFamily = -1;
 
-  bool isComplete() const {
+  bool isComplete() const
+  {
     return graphicsFamily >= 0;
   }
 };
 
-struct AllocatedImage {
+struct AllocatedImage
+{
   VkImage image = VK_NULL_HANDLE;
   VkDeviceMemory memory = VK_NULL_HANDLE;
   VkDeviceSize allocationSize = 0;
 
-  void destroy(VkDevice device) {
+  void destroy(VkDevice device)
+  {
     vkDestroyImage(device, image, nullptr);
     vkFreeMemory(device, memory, nullptr);
 
@@ -39,12 +45,14 @@ struct AllocatedImage {
   }
 };
 
-struct AllocatedBuffer {
+struct AllocatedBuffer
+{
   VkBuffer buffer = VK_NULL_HANDLE;
   VmaAllocation allocation = VK_NULL_HANDLE;
   VmaAllocationInfo allocInfo{};
 
-  void destroy(VmaAllocator allocator) {
+  void destroy(VmaAllocator allocator)
+  {
     vmaDestroyBuffer(allocator, buffer, allocation);
 
     buffer = VK_NULL_HANDLE;
@@ -52,18 +60,21 @@ struct AllocatedBuffer {
   }
 };
 
-struct UniformBuffer {
+struct UniformBuffer
+{
   AllocatedBuffer buffer{};
   void *mapPtr = nullptr;
   bool inUse = false;
 };
 
-struct DescriptorSet {
+struct DescriptorSet
+{
   VkDescriptorSet set = VK_NULL_HANDLE;
   bool inUse = false;
 };
 
-struct CommandBuffer {
+struct CommandBuffer
+{
   VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
   VkSemaphore semaphore = VK_NULL_HANDLE;
   VkFence fence = VK_NULL_HANDLE;
@@ -72,36 +83,44 @@ struct CommandBuffer {
   bool inUse = false;
 };
 
-class VKContext {
- public:
+class VKContext
+{
+  public:
   bool create(bool debugOutput = false);
   void destroy();
 
-  inline const VkInstance &instance() const {
+  inline const VkInstance &instance() const
+  {
     return instance_;
   }
 
-  inline const VkPhysicalDevice &physicalDevice() const {
+  inline const VkPhysicalDevice &physicalDevice() const
+  {
     return physicalDevice_;
   }
 
-  inline const VkDevice &device() const {
+  inline const VkDevice &device() const
+  {
     return device_;
   }
 
-  inline VkQueue &getGraphicsQueue() {
+  inline VkQueue &getGraphicsQueue()
+  {
     return graphicsQueue_;
   }
 
-  inline VkCommandPool &getCommandPool() {
+  inline VkCommandPool &getCommandPool()
+  {
     return commandPool_;
   }
 
-  inline VkPhysicalDeviceProperties &getPhysicalDeviceProperties() {
+  inline VkPhysicalDeviceProperties &getPhysicalDeviceProperties()
+  {
     return deviceProperties_;
   }
 
-  inline VmaAllocator &allocator() {
+  inline VmaAllocator &allocator()
+  {
     return allocator_;
   }
 
@@ -122,7 +141,7 @@ class VKContext {
 
   bool linearBlitAvailable(VkFormat imageFormat);
 
- private:
+  private:
   bool createInstance();
   bool setupDebugMessenger();
   bool pickPhysicalDevice();
@@ -137,10 +156,11 @@ class VKContext {
   static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
   static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice);
 
-  bool extensionsExits(const std::vector<const char *> &requiredExtensions,
-                       const std::unordered_map<std::string, VkExtensionProperties> &availableExtensions);
+  bool extensionsExits(
+    const std::vector<const char *> &requiredExtensions,
+    const std::unordered_map<std::string, VkExtensionProperties> &availableExtensions);
 
- private:
+  private:
   bool debugOutput_ = false;
   VkDebugUtilsMessengerEXT debugMessenger_ = VK_NULL_HANDLE;
 
@@ -170,4 +190,4 @@ class VKContext {
   VkPhysicalDeviceMemoryProperties deviceMemoryProperties_{};
 };
 
-}
+} // namespace SoftGL

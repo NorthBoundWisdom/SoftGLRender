@@ -7,18 +7,23 @@
 #pragma once
 
 #include "Base/Platform.h"
-#include "Render/Renderer.h"
 #include "FramebufferVulkan.h"
-#include "VertexVulkan.h"
-#include "ShaderProgramVulkan.h"
 #include "PipelineStatesVulkan.h"
+#include "Render/Renderer.h"
+#include "ShaderProgramVulkan.h"
+#include "VertexVulkan.h"
 #include "VulkanUtils.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class RendererVulkan : public Renderer {
- public:
-  RendererType type() override { return Renderer_Vulkan; }
+class RendererVulkan : public Renderer
+{
+  public:
+  RendererType type() override
+  {
+    return Renderer_Vulkan;
+  }
   bool create() override;
   void destroy() override;
 
@@ -29,7 +34,8 @@ class RendererVulkan : public Renderer {
   std::shared_ptr<Texture> createTexture(const TextureDesc &desc) override;
 
   // vertex
-  std::shared_ptr<VertexArrayObject> createVertexArrayObject(const VertexArray &vertexArray) override;
+  std::shared_ptr<VertexArrayObject>
+  createVertexArrayObject(const VertexArray &vertexArray) override;
 
   // shader program
   std::shared_ptr<ShaderProgram> createShaderProgram() override;
@@ -39,10 +45,12 @@ class RendererVulkan : public Renderer {
 
   // uniform
   std::shared_ptr<UniformBlock> createUniformBlock(const std::string &name, int size) override;
-  std::shared_ptr<UniformSampler> createUniformSampler(const std::string &name, const TextureDesc &desc) override;
+  std::shared_ptr<UniformSampler> createUniformSampler(const std::string &name,
+                                                       const TextureDesc &desc) override;
 
   // pipeline
-  void beginRenderPass(std::shared_ptr<FrameBuffer> &frameBuffer, const ClearStates &states) override;
+  void beginRenderPass(std::shared_ptr<FrameBuffer> &frameBuffer,
+                       const ClearStates &states) override;
   void setViewPort(int x, int y, int width, int height) override;
   void setVertexArrayObject(std::shared_ptr<VertexArrayObject> &vao) override;
   void setShaderProgram(std::shared_ptr<ShaderProgram> &program) override;
@@ -52,12 +60,13 @@ class RendererVulkan : public Renderer {
   void endRenderPass() override;
   void waitIdle() override;
 
- public:
-  inline VKContext &getVkCtx() {
+  public:
+  inline VKContext &getVkCtx()
+  {
     return vkCtx_;
   }
 
- private:
+  private:
   FrameBufferVulkan *fbo_ = nullptr;
   VertexArrayObjectVulkan *vao_ = nullptr;
   ShaderProgramVulkan *shaderProgram_ = nullptr;
@@ -78,4 +87,4 @@ class RendererVulkan : public Renderer {
   std::vector<VkSemaphore> semaphoresSignal_;
 };
 
-}
+} // namespace SoftGL

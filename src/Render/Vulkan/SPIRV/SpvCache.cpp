@@ -5,31 +5,37 @@
  */
 
 #include "SpvCache.h"
+
+#include "Base/FileUtils.h"
+#include "Base/HashUtils.h"
 #include "SpvCompiler.h"
 #include "json11.hpp"
-#include "Base/HashUtils.h"
-#include "Base/FileUtils.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
 const std::string SHADER_SPV_CACHE_DIR = "./cache/SPV/";
 
-std::string SpvCache::getShaderHashKey(const std::string &source) {
+std::string SpvCache::getShaderHashKey(const std::string &source)
+{
   return HashUtils::getHashMD5(source);
 }
 
-std::string SpvCache::getCacheFilePath(const std::string &hashKey) {
+std::string SpvCache::getCacheFilePath(const std::string &hashKey)
+{
   // TODO make directories if not exist
   return SHADER_SPV_CACHE_DIR + hashKey;
 }
 
-void SpvCache::writeToFile(const std::string &hashKey, const ShaderCompilerResult &compileRet) {
+void SpvCache::writeToFile(const std::string &hashKey, const ShaderCompilerResult &compileRet)
+{
   auto cachePathBase = getCacheFilePath(hashKey);
   std::string jsonFilePath = cachePathBase + ".json";
 
   json11::Json::object obj;
   json11::Json::object uniformsObj;
-  for (const auto &kv : compileRet.uniformsDesc) {
+  for (const auto &kv : compileRet.uniformsDesc)
+  {
     const auto &name = kv.first;
     const auto &desc = kv.second;
     json11::Json::object descObj;
@@ -50,19 +56,22 @@ void SpvCache::writeToFile(const std::string &hashKey, const ShaderCompilerResul
   FileUtils::writeText(jsonFilePath, jsonStr);
 }
 
-ShaderCompilerResult SpvCache::readFromFile(const std::string &hashKey) {
+ShaderCompilerResult SpvCache::readFromFile(const std::string &hashKey)
+{
   ShaderCompilerResult result;
   auto cachePathBase = getCacheFilePath(hashKey);
   std::string jsonFilePath = cachePathBase + ".json";
 
-  if (!FileUtils::exists(jsonFilePath)) {
+  if (!FileUtils::exists(jsonFilePath))
+  {
     return result;
   }
 
   std::string err;
   const auto json = json11::Json::parse(FileUtils::readText(jsonFilePath), err);
   const auto &uniformsObj = json["uniformsDesc"].object_items();
-  for (const auto &kv : uniformsObj) {
+  for (const auto &kv : uniformsObj)
+  {
     const auto &name = kv.first;
     const auto &descJson = kv.second;
     ShaderUniformDesc desc;
@@ -76,7 +85,8 @@ ShaderCompilerResult SpvCache::readFromFile(const std::string &hashKey) {
 
   std::string spvFilePath = json["spvCodesFilePath"].string_value();
   auto bytes = FileUtils::readBytes(spvFilePath);
-  if (bytes.empty() || bytes.size() % sizeof(uint32_t) != 0) {
+  if (bytes.empty() || bytes.size() % sizeof(uint32_t) != 0)
+  {
     LOGE("read spv cache code error: invalid length");
     return result;
   }
@@ -87,4 +97,4 @@ ShaderCompilerResult SpvCache::readFromFile(const std::string &hashKey) {
   return result;
 }
 
-}
+} // namespace SoftGL

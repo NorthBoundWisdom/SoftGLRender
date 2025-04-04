@@ -7,59 +7,73 @@
 #pragma once
 
 #include <algorithm>
-#include "Base/UUID.h"
+
 #include "Base/FileUtils.h"
+#include "Base/UUID.h"
 #include "Render/ShaderProgram.h"
 #include "SPIRV/SpvCompiler.h"
 #include "VulkanUtils.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
 #define DESCRIPTOR_SET_POOL_MAX_SIZE 64
 
-struct UniformInfoVulkan {
+struct UniformInfoVulkan
+{
   ShaderUniformType type;
   uint32_t binding;
   VkShaderStageFlags stageFlags;
 };
 
-class ShaderProgramVulkan : public ShaderProgram {
- public:
-  explicit ShaderProgramVulkan(VKContext &ctx) : vkCtx_(ctx) {
+class ShaderProgramVulkan : public ShaderProgram
+{
+  public:
+  explicit ShaderProgramVulkan(VKContext &ctx)
+    : vkCtx_(ctx)
+  {
     device_ = ctx.device();
     glslHeader_ = "#version 450\n";
   }
 
-  ~ShaderProgramVulkan() {
+  ~ShaderProgramVulkan()
+  {
     vkDestroyShaderModule(device_, vertexShader_, nullptr);
     vkDestroyShaderModule(device_, fragmentShader_, nullptr);
 
     vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
-    for (auto &setLayout : descriptorSetLayouts_) {
+    for (auto &setLayout : descriptorSetLayouts_)
+    {
       vkDestroyDescriptorSetLayout(device_, setLayout, nullptr);
     }
   }
 
-  int getId() const override {
+  int getId() const override
+  {
     return uuid_.get();
   }
 
-  void addDefine(const std::string &def) override {
-    if (def.empty()) {
+  void addDefine(const std::string &def) override
+  {
+    if (def.empty())
+    {
       return;
     }
     glslDefines_.emplace_back("#define " + def + " \n");
   }
 
-  bool compileAndLinkGLSLFile(const std::string &vsPath, const std::string &fsPath) {
+  bool compileAndLinkGLSLFile(const std::string &vsPath, const std::string &fsPath)
+  {
     return compileAndLinkGLSL(FileUtils::readText(vsPath), FileUtils::readText(fsPath));
   }
 
-  bool compileAndLinkGLSL(const std::string &vsSource, const std::string &fsSource) {
+  bool compileAndLinkGLSL(const std::string &vsSource, const std::string &fsSource)
+  {
     // sort defines to make hash stable (for cache)
     std::sort(glslDefines_.begin(), glslDefines_.end());
     std::string definesStr;
-    for (const auto &str : glslDefines_) {
+    for (const auto &str : glslDefines_)
+    {
       definesStr += str;
     }
 
@@ -67,19 +81,23 @@ class ShaderProgramVulkan : public ShaderProgram {
     std::string fsStr = glslHeader_ + definesStr + fsSource;
 
     auto vsData = SpvCompiler::compileVertexShader(vsStr.c_str());
-    if (vsData.spvCodes.empty()) {
+    if (vsData.spvCodes.empty())
+    {
       LOGE("load vertex shader file failed");
       return false;
     }
 
     auto fsData = SpvCompiler::compileFragmentShader(fsStr.c_str());
-    if (fsData.spvCodes.empty()) {
+    if (fsData.spvCodes.empty())
+    {
       LOGE("load fragment shader file failed");
       return false;
     }
 
-    createShaderModule(vertexShader_, vsData.spvCodes.data(), vsData.spvCodes.size() * sizeof(uint32_t));
-    createShaderModule(fragmentShader_, fsData.spvCodes.data(), fsData.spvCodes.size() * sizeof(uint32_t));
+    createShaderModule(vertexShader_, vsData.spvCodes.data(),
+                       vsData.spvCodes.size() * sizeof(uint32_t));
+    createShaderModule(fragmentShader_, fsData.spvCodes.data(),
+                       fsData.spvCodes.size() * sizeof(uint32_t));
     createShaderStages();
 
     createDescriptorSetLayouts(vsData.uniformsDesc, fsData.uniformsDesc);
@@ -88,30 +106,36 @@ class ShaderProgramVulkan : public ShaderProgram {
     return true;
   }
 
-  inline std::vector<VkPipelineShaderStageCreateInfo> &getShaderStages() {
+  inline std::vector<VkPipelineShaderStageCreateInfo> &getShaderStages()
+  {
     return shaderStages_;
   }
 
-  inline std::vector<VkDescriptorSetLayout> &getDescriptorSetLayouts() {
+  inline std::vector<VkDescriptorSetLayout> &getDescriptorSetLayouts()
+  {
     return descriptorSetLayouts_;
   }
 
-  inline std::vector<VkDescriptorSet> &getVkDescriptorSet() {
+  inline std::vector<VkDescriptorSet> &getVkDescriptorSet()
+  {
     return vkDescriptorSets_;
   }
 
-  inline int getUniformLocation(const std::string &name) {
+  inline int getUniformLocation(const std::string &name)
+  {
     auto it = uniformsInfo_.find(name);
-    if (it != uniformsInfo_.end()) {
-      return (int) it->second.binding;
+    if (it != uniformsInfo_.end())
+    {
+      return (int)it->second.binding;
     }
     return -1;
   }
 
-  void bindUniformBuffer(VkDescriptorBufferInfo &info, uint32_t binding) {
+  void bindUniformBuffer(VkDescriptorBufferInfo &info, uint32_t binding)
+  {
     VkWriteDescriptorSet writeDesc{};
     writeDesc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeDesc.dstSet = descriptorSets_[0]->set;   // all uniforms bind to set 0
+    writeDesc.dstSet = descriptorSets_[0]->set; // all uniforms bind to set 0
     writeDesc.dstBinding = binding;
     writeDesc.dstArrayElement = 0;
     writeDesc.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -120,10 +144,11 @@ class ShaderProgramVulkan : public ShaderProgram {
     writeDescriptorSets_.push_back(writeDesc);
   }
 
-  void bindUniformSampler(VkDescriptorImageInfo &info, uint32_t binding) {
+  void bindUniformSampler(VkDescriptorImageInfo &info, uint32_t binding)
+  {
     VkWriteDescriptorSet writeDesc{};
     writeDesc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeDesc.dstSet = descriptorSets_[0]->set;   // all uniforms bind to set 0
+    writeDesc.dstSet = descriptorSets_[0]->set; // all uniforms bind to set 0
     writeDesc.dstBinding = binding;
     writeDesc.dstArrayElement = 0;
     writeDesc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -132,53 +157,66 @@ class ShaderProgramVulkan : public ShaderProgram {
     writeDescriptorSets_.push_back(writeDesc);
   }
 
-  void beginBindUniforms(CommandBuffer *cmd) {
+  void beginBindUniforms(CommandBuffer *cmd)
+  {
     currCmdBuffer_ = cmd;
 
     // allocate descriptor sets
     descriptorSets_.resize(descriptorSetLayouts_.size());
-    for (size_t i = 0; i < descriptorSetLayouts_.size(); i++) {
+    for (size_t i = 0; i < descriptorSetLayouts_.size(); i++)
+    {
       descriptorSets_[i] = getNewDescriptorSet(descriptorSetLayouts_[i]);
     }
 
     writeDescriptorSets_.clear();
   }
 
-  void endBindUniforms() {
-    if (!writeDescriptorSets_.empty()) {
-      vkUpdateDescriptorSets(device_, writeDescriptorSets_.size(), writeDescriptorSets_.data(), 0, nullptr);
+  void endBindUniforms()
+  {
+    if (!writeDescriptorSets_.empty())
+    {
+      vkUpdateDescriptorSets(device_, writeDescriptorSets_.size(), writeDescriptorSets_.data(), 0,
+                             nullptr);
     }
 
     // descriptorSets_ -> vkDescriptorSets_
     vkDescriptorSets_.resize(descriptorSets_.size());
-    for (size_t i = 0; i < descriptorSets_.size(); i++) {
+    for (size_t i = 0; i < descriptorSets_.size(); i++)
+    {
       vkDescriptorSets_[i] = descriptorSets_[i]->set;
     }
 
     // add descriptor sets to command buffer
-    currCmdBuffer_->descriptorSets.insert(currCmdBuffer_->descriptorSets.begin(), descriptorSets_.begin(), descriptorSets_.end());
+    currCmdBuffer_->descriptorSets.insert(currCmdBuffer_->descriptorSets.begin(),
+                                          descriptorSets_.begin(), descriptorSets_.end());
   }
 
-  inline CommandBuffer *getCommandBuffer() {
+  inline CommandBuffer *getCommandBuffer()
+  {
     return currCmdBuffer_;
   }
 
- private:
-  void createDescriptorSetLayouts(std::unordered_map<std::string, ShaderUniformDesc> &uniformsDescVertex,
-                                  std::unordered_map<std::string, ShaderUniformDesc> &uniformsDescFragment) {
-    for (auto &kv : uniformsDescVertex) {
+  private:
+  void createDescriptorSetLayouts(
+    std::unordered_map<std::string, ShaderUniformDesc> &uniformsDescVertex,
+    std::unordered_map<std::string, ShaderUniformDesc> &uniformsDescFragment)
+  {
+    for (auto &kv : uniformsDescVertex)
+    {
       uniformsInfo_[kv.first].type = kv.second.type;
       uniformsInfo_[kv.first].stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
       uniformsInfo_[kv.first].binding = kv.second.binding;
     }
-    for (auto &kv : uniformsDescFragment) {
+    for (auto &kv : uniformsDescFragment)
+    {
       uniformsInfo_[kv.first].type = kv.second.type;
       uniformsInfo_[kv.first].stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
       uniformsInfo_[kv.first].binding = kv.second.binding;
     }
 
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    for (auto &kv : uniformsInfo_) {
+    for (auto &kv : uniformsInfo_)
+    {
       VkDescriptorSetLayoutBinding layoutBinding{};
       layoutBinding.binding = kv.second.binding;
       layoutBinding.descriptorCount = 1;
@@ -193,44 +231,45 @@ class ShaderProgramVulkan : public ShaderProgram {
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     layoutInfo.pBindings = bindings.data();
 
-    descriptorSetLayouts_.resize(1);  // only one set, all uniform bind to set 0
+    descriptorSetLayouts_.resize(1); // only one set, all uniform bind to set 0
     VK_CHECK(vkCreateDescriptorSetLayout(device_, &layoutInfo, nullptr, &descriptorSetLayouts_[0]));
   }
 
-  static VkDescriptorType getDescriptorType(ShaderUniformType type) {
-    switch (type) {
-      case UniformType_Block:
-        return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      case UniformType_Sampler:
-        return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      default:
-        break;
+  static VkDescriptorType getDescriptorType(ShaderUniformType type)
+  {
+    switch (type)
+    {
+    case UniformType_Block: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case UniformType_Sampler: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    default: break;
     }
     return VK_DESCRIPTOR_TYPE_MAX_ENUM;
   }
 
-  void createDescriptorPool() {
+  void createDescriptorPool()
+  {
     uint32_t uniformBlockCnt = 0;
     uint32_t uniformSamplerCnt = 0;
-    for (auto &kv : uniformsInfo_) {
-      switch (kv.second.type) {
-        case UniformType_Block:
-          uniformBlockCnt++;
-          break;
-        case UniformType_Sampler:
-          uniformSamplerCnt++;
-          break;
-        default:
-          break;
+    for (auto &kv : uniformsInfo_)
+    {
+      switch (kv.second.type)
+      {
+      case UniformType_Block: uniformBlockCnt++; break;
+      case UniformType_Sampler: uniformSamplerCnt++; break;
+      default: break;
       }
     }
 
     std::vector<VkDescriptorPoolSize> poolSizes;
-    if (uniformBlockCnt > 0) {
-      poolSizes.push_back({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformBlockCnt * DESCRIPTOR_SET_POOL_MAX_SIZE});
+    if (uniformBlockCnt > 0)
+    {
+      poolSizes.push_back(
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformBlockCnt * DESCRIPTOR_SET_POOL_MAX_SIZE});
     }
-    if (uniformSamplerCnt > 0) {
-      poolSizes.push_back({VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, uniformSamplerCnt * DESCRIPTOR_SET_POOL_MAX_SIZE});
+    if (uniformSamplerCnt > 0)
+    {
+      poolSizes.push_back({VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                           uniformSamplerCnt * DESCRIPTOR_SET_POOL_MAX_SIZE});
     }
 
     VkDescriptorPoolCreateInfo poolInfo{};
@@ -242,17 +281,21 @@ class ShaderProgramVulkan : public ShaderProgram {
     VK_CHECK(vkCreateDescriptorPool(device_, &poolInfo, nullptr, &descriptorPool_));
   }
 
-  DescriptorSet *getNewDescriptorSet(VkDescriptorSetLayout layout) {
+  DescriptorSet *getNewDescriptorSet(VkDescriptorSetLayout layout)
+  {
     auto it = descriptorSetPool_.find(layout);
-    if (it == descriptorSetPool_.end()) {
+    if (it == descriptorSetPool_.end())
+    {
       std::vector<DescriptorSet> descSetPool;
       descSetPool.reserve(DESCRIPTOR_SET_POOL_MAX_SIZE);
       descriptorSetPool_[layout] = std::move(descSetPool);
     }
     auto &pool = descriptorSetPool_[layout];
 
-    for (auto &desc : pool) {
-      if (!desc.inUse) {
+    for (auto &desc : pool)
+    {
+      if (!desc.inUse)
+      {
         desc.inUse = true;
         return &desc;
       }
@@ -270,13 +313,15 @@ class ShaderProgramVulkan : public ShaderProgram {
     pool.push_back(descSet);
 
     maxDescriptorSetPoolSize_ = std::max(maxDescriptorSetPoolSize_, pool.size());
-    if (maxDescriptorSetPoolSize_ >= DESCRIPTOR_SET_POOL_MAX_SIZE) {
+    if (maxDescriptorSetPoolSize_ >= DESCRIPTOR_SET_POOL_MAX_SIZE)
+    {
       LOGE("error: descriptor set pool size exceed");
     }
     return &pool.back();
   }
 
-  void createShaderStages() {
+  void createShaderStages()
+  {
     shaderStages_.resize(2);
     auto &vertShaderStageInfo = shaderStages_[0];
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -291,7 +336,8 @@ class ShaderProgramVulkan : public ShaderProgram {
     fragShaderStageInfo.pName = "main";
   }
 
-  void createShaderModule(VkShaderModule &shaderModule, const uint32_t *spvCode, size_t codeSize) {
+  void createShaderModule(VkShaderModule &shaderModule, const uint32_t *spvCode, size_t codeSize)
+  {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = codeSize;
@@ -300,7 +346,7 @@ class ShaderProgramVulkan : public ShaderProgram {
     VK_CHECK(vkCreateShaderModule(device_, &createInfo, nullptr, &shaderModule));
   }
 
- private:
+  private:
   UUID<ShaderProgramVulkan> uuid_;
   VKContext &vkCtx_;
   VkDevice device_ = VK_NULL_HANDLE;
@@ -327,4 +373,4 @@ class ShaderProgramVulkan : public ShaderProgram {
   CommandBuffer *currCmdBuffer_ = nullptr;
 };
 
-}
+} // namespace SoftGL

@@ -6,15 +6,17 @@
 
 #pragma once
 
-#include <string>
 #include <cstdint>
+#include <string>
 
-namespace SoftGL {
+namespace SoftGL
+{
 
 struct ShaderCompilerResult;
 
-class SpvCache {
- public:
+class SpvCache
+{
+  public:
   static std::string getShaderHashKey(const std::string &source);
 
   static std::string getCacheFilePath(const std::string &hashKey);
@@ -24,4 +26,4 @@ class SpvCache {
   static ShaderCompilerResult readFromFile(const std::string &hashKey);
 };
 
-}
+} // namespace SoftGL

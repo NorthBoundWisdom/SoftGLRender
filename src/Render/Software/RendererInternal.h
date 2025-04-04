@@ -9,9 +9,11 @@
 #include "Base/MemoryUtils.h"
 #include "Render/Software/ShaderProgramSoft.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-struct Viewport {
+struct Viewport
+{
   float x;
   float y;
   float width;
@@ -27,7 +29,8 @@ struct Viewport {
   float absMaxDepth;
 };
 
-struct VertexHolder {
+struct VertexHolder
+{
   bool discard = false;
   size_t index = 0;
 
@@ -35,47 +38,55 @@ struct VertexHolder {
   float *varyings = nullptr;
 
   int clipMask = 0;
-  glm::aligned_vec4 clipPos = glm::vec4(0.f);     // clip space position
-  glm::aligned_vec4 fragPos = glm::vec4(0.f);     // screen space position
+  glm::aligned_vec4 clipPos = glm::vec4(0.f); // clip space position
+  glm::aligned_vec4 fragPos = glm::vec4(0.f); // screen space position
 
   std::shared_ptr<uint8_t> vertexHolder = nullptr;
   std::shared_ptr<float> varyingsHolder = nullptr;
 };
 
-struct PrimitiveHolder {
+struct PrimitiveHolder
+{
   bool discard = false;
   bool frontFacing = true;
   size_t indices[3] = {0, 0, 0};
 };
 
-class SampleContext {
- public:
+class SampleContext
+{
+  public:
   bool inside = false;
   glm::ivec2 fboCoord = glm::ivec2(0);
   glm::aligned_vec4 position = glm::aligned_vec4(0.f);
   glm::aligned_vec4 barycentric = glm::aligned_vec4(0.f);
 };
 
-class PixelContext {
- public:
-  inline static glm::vec2 *GetSampleLocation4X() {
+class PixelContext
+{
+  public:
+  inline static glm::vec2 *GetSampleLocation4X()
+  {
     static glm::vec2 location_4x[4] = {
-        {0.375f, 0.875f},
-        {0.875f, 0.625f},
-        {0.125f, 0.375f},
-        {0.625f, 0.125f},
+      {0.375f, 0.875f},
+      {0.875f, 0.625f},
+      {0.125f, 0.375f},
+      {0.625f, 0.125f},
     };
     return location_4x;
   }
 
-  void Init(float x, float y, int sample_cnt = 1) {
+  void Init(float x, float y, int sample_cnt = 1)
+  {
     inside = false;
     sampleCount = sample_cnt;
     coverage = 0;
-    if (sampleCount > 1) {
-      samples.resize(sampleCount + 1);  // store center sample at end
-      if (sampleCount == 4) {
-        for (int i = 0; i < sampleCount; i++) {
+    if (sampleCount > 1)
+    {
+      samples.resize(sampleCount + 1); // store center sample at end
+      if (sampleCount == 4)
+      {
+        for (int i = 0; i < sampleCount; i++)
+        {
           samples[i].fboCoord = glm::ivec2(x, y);
           samples[i].position = glm::vec4(GetSampleLocation4X()[i] + glm::vec2(x, y), 0.f, 0.f);
         }
@@ -83,10 +94,14 @@ class PixelContext {
         samples[4].fboCoord = glm::ivec2(x, y);
         samples[4].position = glm::vec4(x + 0.5f, y + 0.5f, 0.f, 0.f);
         sampleShading = &samples[4];
-      } else {
+      }
+      else
+      {
         // not support
       }
-    } else {
+    }
+    else
+    {
       samples.resize(1);
       samples[0].fboCoord = glm::ivec2(x, y);
       samples[0].position = glm::vec4(x + 0.5f, y + 0.5f, 0.f, 0.f);
@@ -94,36 +109,46 @@ class PixelContext {
     }
   }
 
-  bool InitCoverage() {
-    if (sampleCount > 1) {
+  bool InitCoverage()
+  {
+    if (sampleCount > 1)
+    {
       coverage = 0;
       inside = false;
-      for (int i = 0; i < samples.size() - 1; i++) {
-        if (samples[i].inside) {
+      for (int i = 0; i < samples.size() - 1; i++)
+      {
+        if (samples[i].inside)
+        {
           coverage++;
         }
       }
       inside = coverage > 0;
-    } else {
+    }
+    else
+    {
       coverage = 1;
       inside = samples[0].inside;
     }
     return inside;
   }
 
-  void InitShadingSample() {
-    if (sampleShading->inside) {
+  void InitShadingSample()
+  {
+    if (sampleShading->inside)
+    {
       return;
     }
-    for (auto &sample : samples) {
-      if (sample.inside) {
+    for (auto &sample : samples)
+    {
+      if (sample.inside)
+      {
         sampleShading = &sample;
         break;
       }
     }
   }
 
- public:
+  public:
   bool inside = false;
   float *varyingsFrag = nullptr;
   std::vector<SampleContext> samples;
@@ -132,30 +157,36 @@ class PixelContext {
   int coverage = 0;
 };
 
-class PixelQuadContext {
- public:
-  void SetVaryingsSize(size_t size) {
-    if (varyingsAlignedCnt_ != size) {
+class PixelQuadContext
+{
+  public:
+  void SetVaryingsSize(size_t size)
+  {
+    if (varyingsAlignedCnt_ != size)
+    {
       varyingsAlignedCnt_ = size;
       varyingsPool_ = MemoryUtils::makeAlignedBuffer<float>(4 * varyingsAlignedCnt_);
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 4; i++)
+      {
         pixels[i].varyingsFrag = varyingsPool_.get() + i * varyingsAlignedCnt_;
       }
     }
   }
 
-  void Init(float x, float y, int sample_cnt = 1) {
+  void Init(float x, float y, int sample_cnt = 1)
+  {
     pixels[0].Init(x, y, sample_cnt);
     pixels[1].Init(x + 1, y, sample_cnt);
     pixels[2].Init(x, y + 1, sample_cnt);
     pixels[3].Init(x + 1, y + 1, sample_cnt);
   }
 
-  bool CheckInside() {
+  bool CheckInside()
+  {
     return pixels[0].inside || pixels[1].inside || pixels[2].inside || pixels[3].inside;
   }
 
- public:
+  public:
   /**
    *   p2--p3
    *   |   |
@@ -180,9 +211,9 @@ class PixelQuadContext {
   // shader program
   std::shared_ptr<ShaderProgramSoft> shaderProgram = nullptr;
 
- private:
+  private:
   size_t varyingsAlignedCnt_ = 0;
   std::shared_ptr<float> varyingsPool_ = nullptr;
 };
 
-}
+} // namespace SoftGL

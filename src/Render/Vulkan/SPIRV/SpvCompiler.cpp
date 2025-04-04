@@ -5,50 +5,55 @@
  */
 
 #include "SpvCompiler.h"
-#include "glslang/Public/ShaderLang.h"
-#include "glslang/Public/ResourceLimits.h"
-#include "SPIRV/GlslangToSpv.h"
+
 #include "Base/Logger.h"
 #include "Base/Timer.h"
+#include "SPIRV/GlslangToSpv.h"
 #include "SpvCache.h"
+#include "glslang/Public/ResourceLimits.h"
+#include "glslang/Public/ShaderLang.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class ReflectionTraverser : public glslang::TIntermTraverser {
- public:
+class ReflectionTraverser : public glslang::TIntermTraverser
+{
+  public:
   explicit ReflectionTraverser(std::unordered_map<std::string, ShaderUniformDesc> &uniformsDesc)
-      : uniformsDesc(uniformsDesc) {}
+    : uniformsDesc(uniformsDesc)
+  {
+  }
 
-  void visitSymbol(glslang::TIntermSymbol *symbol) override {
-    if (symbol->getQualifier().isUniform()) {
+  void visitSymbol(glslang::TIntermSymbol *symbol) override
+  {
+    if (symbol->getQualifier().isUniform())
+    {
       auto accessName = symbol->getAccessName();
       auto qualifier = symbol->getQualifier();
 
       ShaderUniformDesc desc;
       desc.name = accessName.c_str();
-      switch (symbol->getBasicType()) {
-        case glslang::EbtSampler:
-          desc.type = UniformType_Sampler;
-          break;
-        case glslang::EbtBlock:
-          desc.type = UniformType_Block;
-          break;
-        default:
-          desc.type = UniformType_Unknown;
-          break;
+      switch (symbol->getBasicType())
+      {
+      case glslang::EbtSampler: desc.type = UniformType_Sampler; break;
+      case glslang::EbtBlock: desc.type = UniformType_Block; break;
+      default: desc.type = UniformType_Unknown; break;
       }
 
       desc.location = 0;
       desc.binding = 0;
       desc.set = 0;
 
-      if (qualifier.hasLocation()) {
+      if (qualifier.hasLocation())
+      {
         desc.location = qualifier.layoutLocation;
       }
-      if (qualifier.hasBinding()) {
+      if (qualifier.hasBinding())
+      {
         desc.binding = qualifier.layoutBinding;
       }
-      if (qualifier.hasSet()) {
+      if (qualifier.hasSet())
+      {
         desc.set = qualifier.layoutSet;
       }
 
@@ -59,7 +64,8 @@ class ReflectionTraverser : public glslang::TIntermTraverser {
   std::unordered_map<std::string, ShaderUniformDesc> &uniformsDesc;
 };
 
-static ShaderCompilerResult compileShaderInternal(EShLanguage stage, const char *shaderSource) {
+static ShaderCompilerResult compileShaderInternal(EShLanguage stage, const char *shaderSource)
+{
   FUNCTION_TIMED("SpvCompiler::compileShaderInternal");
 #ifdef DEBUG
   bool debug = true;
@@ -70,13 +76,14 @@ static ShaderCompilerResult compileShaderInternal(EShLanguage stage, const char 
   ShaderCompilerResult compilerResult;
 
   glslang::InitializeProcess();
-  auto messages = (EShMessages) (EShMsgSpvRules | EShMsgVulkanRules | EShMsgDefault);
+  auto messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules | EShMsgDefault);
 
   glslang::TProgram program;
   glslang::TShader shader(stage);
 
-  if (debug) {
-    messages = (EShMessages) (messages | EShMsgDebugInfo);
+  if (debug)
+  {
+    messages = (EShMessages)(messages | EShMsgDebugInfo);
   }
 
   const char *fileName = "";
@@ -88,7 +95,8 @@ static ShaderCompilerResult compileShaderInternal(EShLanguage stage, const char 
 
   // compile
   auto resources = GetDefaultResources();
-  if (!shader.parse(resources, glslVersion, false, messages)) {
+  if (!shader.parse(resources, glslVersion, false, messages))
+  {
     LOGE("GLSL parsing failed:");
     LOGE("%s", shader.getInfoLog());
     LOGE("%s", shader.getInfoDebugLog());
@@ -102,7 +110,8 @@ static ShaderCompilerResult compileShaderInternal(EShLanguage stage, const char 
 
   // link
   program.addShader(&shader);
-  if (!program.link(messages)) {
+  if (!program.link(messages))
+  {
     LOGE("GLSL linking failed:");
     LOGE("%s", program.getInfoLog());
     LOGE("%s", program.getInfoDebugLog());
@@ -112,48 +121,53 @@ static ShaderCompilerResult compileShaderInternal(EShLanguage stage, const char 
   spv::SpvBuildLogger logger;
   glslang::SpvOptions spvOptions;
 
-  if (debug) {
+  if (debug)
+  {
     spvOptions.disableOptimizer = true;
     spvOptions.optimizeSize = false;
     spvOptions.generateDebugInfo = true;
-  } else {
+  }
+  else
+  {
     spvOptions.generateDebugInfo = false;
     spvOptions.optimizeSize = true;
     spvOptions.disableOptimizer = false;
   }
 
-  glslang::GlslangToSpv(*program.getIntermediate((EShLanguage) stage), compilerResult.spvCodes, &logger, &spvOptions);
+  glslang::GlslangToSpv(*program.getIntermediate((EShLanguage)stage), compilerResult.spvCodes,
+                        &logger, &spvOptions);
   glslang::FinalizeProcess();
 
   return compilerResult;
 }
 
-ShaderCompilerResult SpvCompiler::compileVertexShader(const char *shaderSource) {
+ShaderCompilerResult SpvCompiler::compileVertexShader(const char *shaderSource)
+{
   return compileShader(shaderSource, ShaderStage_Vertex);
 }
 
-ShaderCompilerResult SpvCompiler::compileFragmentShader(const char *shaderSource) {
+ShaderCompilerResult SpvCompiler::compileFragmentShader(const char *shaderSource)
+{
   return compileShader(shaderSource, ShaderStage_Fragment);
 }
 
-ShaderCompilerResult SpvCompiler::compileShader(const char *shaderSource, ShaderStage stage) {
+ShaderCompilerResult SpvCompiler::compileShader(const char *shaderSource, ShaderStage stage)
+{
   EShLanguage lang;
-  switch (stage) {
-    case ShaderStage_Vertex:
-      lang = EShLangVertex;
-      break;
-    case ShaderStage_Fragment:
-      lang = EShLangFragment;
-      break;
-    default:
-      return {};
+  switch (stage)
+  {
+  case ShaderStage_Vertex: lang = EShLangVertex; break;
+  case ShaderStage_Fragment: lang = EShLangFragment; break;
+  default: return {};
   }
 #ifndef NO_SPV_CACHE
   auto hashKey = SpvCache::getShaderHashKey(shaderSource);
   auto compileRet = SpvCache::readFromFile(hashKey);
-  if (compileRet.spvCodes.empty()) {
+  if (compileRet.spvCodes.empty())
+  {
     compileRet = compileShaderInternal(lang, shaderSource);
-    if (!compileRet.spvCodes.empty()) {
+    if (!compileRet.spvCodes.empty())
+    {
       SpvCache::writeToFile(hashKey, compileRet);
     }
   }
@@ -163,4 +177,4 @@ ShaderCompilerResult SpvCompiler::compileShader(const char *shaderSource, Shader
   return compileRet;
 }
 
-}
+} // namespace SoftGL

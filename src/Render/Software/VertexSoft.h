@@ -9,11 +9,14 @@
 #include "Base/UUID.h"
 #include "Render/Vertex.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class VertexArrayObjectSoft : public VertexArrayObject {
- public:
-  explicit VertexArrayObjectSoft(const VertexArray &vertexArray) {
+class VertexArrayObjectSoft : public VertexArrayObject
+{
+  public:
+  explicit VertexArrayObjectSoft(const VertexArray &vertexArray)
+  {
     // init vertexes
     vertexStride = vertexArray.vertexesDesc[0].stride;
     vertexCnt = vertexArray.vertexesBufferLength / vertexStride;
@@ -26,23 +29,25 @@ class VertexArrayObjectSoft : public VertexArrayObject {
     memcpy(indices.data(), vertexArray.indexBuffer, vertexArray.indexBufferLength);
   }
 
-  void updateVertexData(void *data, size_t length) override {
+  void updateVertexData(void *data, size_t length) override
+  {
     memcpy(vertexes.data(), data, std::min(length, vertexes.size()));
   }
 
-  int getId() const override {
+  int getId() const override
+  {
     return uuid_.get();
   }
 
- public:
+  public:
   size_t vertexStride = 0;
   size_t vertexCnt = 0;
   size_t indicesCnt = 0;
   std::vector<uint8_t> vertexes;
   std::vector<int32_t> indices;
 
- private:
+  private:
   UUID<VertexArrayObjectSoft> uuid_;
 };
 
-}
+} // namespace SoftGL

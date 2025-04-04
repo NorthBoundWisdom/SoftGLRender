@@ -8,9 +8,11 @@
 
 #include "Base/GLMInc.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-enum DepthFunction {
+enum DepthFunction
+{
   DepthFunc_NEVER,
   DepthFunc_LESS,
   DepthFunc_EQUAL,
@@ -21,7 +23,8 @@ enum DepthFunction {
   DepthFunc_ALWAYS,
 };
 
-enum BlendFactor {
+enum BlendFactor
+{
   BlendFactor_ZERO,
   BlendFactor_ONE,
   BlendFactor_SRC_COLOR,
@@ -34,7 +37,8 @@ enum BlendFactor {
   BlendFactor_ONE_MINUS_DST_ALPHA,
 };
 
-enum BlendFunction {
+enum BlendFunction
+{
   BlendFunc_ADD,
   BlendFunc_SUBTRACT,
   BlendFunc_REVERSE_SUBTRACT,
@@ -42,13 +46,15 @@ enum BlendFunction {
   BlendFunc_MAX,
 };
 
-enum PolygonMode {
+enum PolygonMode
+{
   PolygonMode_POINT,
   PolygonMode_LINE,
   PolygonMode_FILL,
 };
 
-struct BlendParameters {
+struct BlendParameters
+{
   BlendFunction blendFuncRgb = BlendFunc_ADD;
   BlendFactor blendSrcRgb = BlendFactor_ONE;
   BlendFactor blendDstRgb = BlendFactor_ZERO;
@@ -57,26 +63,30 @@ struct BlendParameters {
   BlendFactor blendSrcAlpha = BlendFactor_ONE;
   BlendFactor blendDstAlpha = BlendFactor_ZERO;
 
-  void SetBlendFactor(BlendFactor src, BlendFactor dst) {
+  void SetBlendFactor(BlendFactor src, BlendFactor dst)
+  {
     blendSrcRgb = src;
     blendSrcAlpha = src;
     blendDstRgb = dst;
     blendDstAlpha = dst;
   }
 
-  void SetBlendFunc(BlendFunction func) {
+  void SetBlendFunc(BlendFunction func)
+  {
     blendFuncRgb = func;
     blendFuncAlpha = func;
   }
 };
 
-enum PrimitiveType {
+enum PrimitiveType
+{
   Primitive_POINT,
   Primitive_LINE,
   Primitive_TRIANGLE,
 };
 
-struct RenderStates {
+struct RenderStates
+{
   bool blend = false;
   BlendParameters blendParams;
 
@@ -91,11 +101,12 @@ struct RenderStates {
   float lineWidth = 1.f;
 };
 
-struct ClearStates {
+struct ClearStates
+{
   bool depthFlag = false;
   bool colorFlag = false;
   glm::vec4 clearColor = glm::vec4(0.f);
   float clearDepth = 1.f;
 };
 
-}
+} // namespace SoftGL

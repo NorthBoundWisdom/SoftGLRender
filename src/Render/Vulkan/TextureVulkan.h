@@ -7,26 +7,31 @@
 #pragma once
 
 #include <functional>
-#include "Base/UUID.h"
+
 #include "Base/ImageUtils.h"
+#include "Base/UUID.h"
+#include "EnumsVulkan.h"
 #include "Render/Texture.h"
 #include "VKContext.h"
-#include "EnumsVulkan.h"
 #include "VKGLInterop.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class TextureVulkan : public Texture {
- public:
+class TextureVulkan : public Texture
+{
+  public:
   TextureVulkan(VKContext &ctx, const TextureDesc &desc);
 
   ~TextureVulkan() override;
 
-  inline int getId() const override {
+  inline int getId() const override
+  {
     return uuid_.get();
   }
 
-  inline void setSamplerDesc(SamplerDesc &sampler) override {
+  inline void setSamplerDesc(SamplerDesc &sampler) override
+  {
     samplerDesc_ = sampler;
   };
 
@@ -39,69 +44,82 @@ class TextureVulkan : public Texture {
   void setImageData(const std::vector<std::shared_ptr<Buffer<float>>> &buffers) override;
 
   void readPixels(uint32_t layer, uint32_t level,
-                  const std::function<void(uint8_t *buffer, uint32_t width, uint32_t height, uint32_t rowStride)> &func);
+                  const std::function<void(uint8_t *buffer, uint32_t width, uint32_t height,
+                                           uint32_t rowStride)> &func);
 
   VkSampler &getSampler();
 
-  inline VkSampleCountFlagBits getSampleCount() {
+  inline VkSampleCountFlagBits getSampleCount()
+  {
     return multiSample ? VK_SAMPLE_COUNT_4_BIT : VK_SAMPLE_COUNT_1_BIT;
   }
 
-  inline VkImage getVkImage() {
+  inline VkImage getVkImage()
+  {
     return image_.image;
   }
 
-  inline uint32_t getLevelCount() {
+  inline uint32_t getLevelCount()
+  {
     return levelCount_;
   }
 
-  inline uint32_t getLayerCount() {
-    switch (type) {
-      case TextureType_2D:
-        return 1;
-      case TextureType_CUBE:
-        return 6;
+  inline uint32_t getLayerCount()
+  {
+    switch (type)
+    {
+    case TextureType_2D: return 1;
+    case TextureType_CUBE: return 6;
     }
     return 0;
   }
 
-  inline uint32_t getPixelByteSize() {
-    switch (format) {
-      case TextureFormat_RGBA8:
-        return sizeof(RGBA);
-      case TextureFormat_FLOAT32:
-        return sizeof(float);
+  inline uint32_t getPixelByteSize()
+  {
+    switch (format)
+    {
+    case TextureFormat_RGBA8: return sizeof(RGBA);
+    case TextureFormat_FLOAT32: return sizeof(float);
     }
     return 0;
   }
 
-  inline uint32_t getImageAspect() {
-    if (usage & TextureUsage_AttachmentDepth) {
+  inline uint32_t getImageAspect()
+  {
+    if (usage & TextureUsage_AttachmentDepth)
+    {
       return VK_IMAGE_ASPECT_DEPTH_BIT;
     }
     return VK_IMAGE_ASPECT_COLOR_BIT;
   }
 
-  inline VkImageView &getSampleImageView() {
-    if (sampleView_ == VK_NULL_HANDLE) {
+  inline VkImageView &getSampleImageView()
+  {
+    if (sampleView_ == VK_NULL_HANDLE)
+    {
       createImageView(sampleView_, image_.image);
     }
     return sampleView_;
   }
 
-  inline VKGLInterop &getGLInterop() {
+  inline VKGLInterop &getGLInterop()
+  {
     return glInterop_;
   }
 
-  VkSemaphore getSemaphoreWait() {
-    if (needGLInterop_) {
+  VkSemaphore getSemaphoreWait()
+  {
+    if (needGLInterop_)
+    {
       return glInterop_.getSemaphoreGLComplete();
     }
     return VK_NULL_HANDLE;
   }
 
-  VkSemaphore getSemaphoreSignal() {
-    if (needGLInterop_) {
+  VkSemaphore getSemaphoreSignal()
+  {
+    if (needGLInterop_)
+    {
       return glInterop_.getSemaphoreGLReady();
     }
     return VK_NULL_HANDLE;
@@ -112,15 +130,12 @@ class TextureVulkan : public Texture {
   VkImageView createAttachmentView(VkImageAspectFlags aspect, uint32_t layer, uint32_t level);
 
   static void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image,
-                                    VkImageSubresourceRange subresourceRange,
-                                    VkAccessFlags srcMask,
-                                    VkAccessFlags dstMask,
-                                    VkImageLayout oldLayout,
-                                    VkImageLayout newLayout,
-                                    VkPipelineStageFlags srcStage,
+                                    VkImageSubresourceRange subresourceRange, VkAccessFlags srcMask,
+                                    VkAccessFlags dstMask, VkImageLayout oldLayout,
+                                    VkImageLayout newLayout, VkPipelineStageFlags srcStage,
                                     VkPipelineStageFlags dstStage);
 
- protected:
+  protected:
   void createImage(const void *pNext = nullptr);
   void createImageResolve(const void *pNext = nullptr);
   bool createImageHost(uint32_t level);
@@ -128,7 +143,7 @@ class TextureVulkan : public Texture {
   void generateMipmaps();
   void setImageDataInternal(const std::vector<const void *> &buffers, VkDeviceSize imageSize);
 
- protected:
+  protected:
   UUID<TextureVulkan> uuid_;
   VKContext &vkCtx_;
   VkDevice device_ = VK_NULL_HANDLE;
@@ -143,7 +158,7 @@ class TextureVulkan : public Texture {
   VkFormat vkFormat_ = VK_FORMAT_MAX_ENUM;
 
   AllocatedImage image_{};
-  AllocatedImage imageResolve_{};  // msaa resolve (only color)
+  AllocatedImage imageResolve_{}; // msaa resolve (only color)
 
   VkSampler sampler_ = VK_NULL_HANDLE;
   VkImageView sampleView_ = VK_NULL_HANDLE;
@@ -162,4 +177,4 @@ class TextureVulkan : public Texture {
   uint32_t hostImageLevel_ = 0;
 };
 
-}
+} // namespace SoftGL

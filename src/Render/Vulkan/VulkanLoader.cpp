@@ -6,7 +6,8 @@
 
 #include "VulkanLoader.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
 INIT_VK_FUNC(vkCreateDebugUtilsMessengerEXT);
 INIT_VK_FUNC(vkDestroyDebugUtilsMessengerEXT);
@@ -19,4 +20,4 @@ INIT_VK_FUNC(vkGetSemaphoreFdKHR);
 INIT_VK_FUNC(vkGetMemoryFdKHR);
 #endif
 
-}
+} // namespace SoftGL

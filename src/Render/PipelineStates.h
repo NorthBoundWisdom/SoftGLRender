@@ -8,17 +8,21 @@
 
 #include "RenderStates.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class PipelineStates {
- public:
+class PipelineStates
+{
+  public:
   explicit PipelineStates(const RenderStates &states)
-      : renderStates(states) {}
+    : renderStates(states)
+  {
+  }
 
   virtual ~PipelineStates() = default;
 
- public:
+  public:
   RenderStates renderStates;
 };
 
-}
+} // namespace SoftGL

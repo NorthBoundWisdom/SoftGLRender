@@ -22,14 +22,17 @@
 #endif
 
 #define REG_VK_FUNC(name) static PFN_##name name
-#define LOAD_VK_FUNC(name) name = (PFN_##name) vkGetInstanceProcAddr(instance, #name)
+#define LOAD_VK_FUNC(name) name = (PFN_##name)vkGetInstanceProcAddr(instance, #name)
 #define INIT_VK_FUNC(name) PFN_##name VKLoader::name = nullptr
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class VKLoader {
- public:
-  static void init(VkInstance instance) {
+class VKLoader
+{
+  public:
+  static void init(VkInstance instance)
+  {
     LOAD_VK_FUNC(vkCreateDebugUtilsMessengerEXT);
     LOAD_VK_FUNC(vkDestroyDebugUtilsMessengerEXT);
 
@@ -42,7 +45,7 @@ class VKLoader {
 #endif
   }
 
- public:
+  public:
   REG_VK_FUNC(vkCreateDebugUtilsMessengerEXT);
   REG_VK_FUNC(vkDestroyDebugUtilsMessengerEXT);
 
@@ -55,4 +58,4 @@ class VKLoader {
 #endif
 };
 
-}
+} // namespace SoftGL

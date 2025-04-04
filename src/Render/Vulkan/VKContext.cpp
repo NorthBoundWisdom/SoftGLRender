@@ -5,10 +5,11 @@
  */
 
 #include "VKContext.h"
+
 #include "Base/Logger.h"
 #include "Base/Timer.h"
-#include "VulkanUtils.h"
 #include "VKGLInterop.h"
+#include "VulkanUtils.h"
 
 #pragma clang diagnostic push
 
@@ -29,7 +30,8 @@
 
 #pragma clang diagnostic pop
 
-namespace SoftGL {
+namespace SoftGL
+{
 
 #define COMMAND_BUFFER_POOL_MAX_SIZE 128
 #define UNIFORM_BUFFER_POOL_MAX_SIZE 128
@@ -37,55 +39,53 @@ namespace SoftGL {
 #define SEMAPHORE_MAX_SIZE 8
 
 const std::vector<const char *> kValidationLayers = {
-    "VK_LAYER_KHRONOS_validation",
+  "VK_LAYER_KHRONOS_validation",
 };
 
 const std::vector<const char *> kRequiredInstanceExtensions = {
 #ifdef PLATFORM_OSX
-    VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+  VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
 #endif
-    VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+  VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 };
 
 const std::vector<const char *> kRequiredDeviceExtensions = {
 #ifdef PLATFORM_OSX
-    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
+  VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
 #endif
 };
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                      VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                                      const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                                      void *pUserData) {
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+vkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                VkDebugUtilsMessageTypeFlagsEXT messageType,
+                const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
+{
   LogLevel level = LOG_INFO;
-  switch (messageSeverity) {
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-      level = LOG_INFO;
+  switch (messageSeverity)
+  {
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: level = LOG_INFO;
 #ifndef VULKAN_LOG_INFO
-      return VK_FALSE;
+    return VK_FALSE;
 #else
-      break;
+    break;
 #endif
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-      level = LOG_WARNING;
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-      level = LOG_ERROR;
-      break;
-    default:
-      break;
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: level = LOG_WARNING; break;
+  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: level = LOG_ERROR; break;
+  default: break;
   }
   SoftGL::Logger::log(level, __FILE__, __LINE__, "validation layer: %s", pCallbackData->pMessage);
   return VK_FALSE;
 }
 
-bool VKContext::create(bool debugOutput) {
+bool VKContext::create(bool debugOutput)
+{
   FUNCTION_TIMED("VKContext::create");
-#define EXEC_VULKAN_STEP(step)                    \
-  if (!step()) {                                  \
-    LOGE("initVulkan error: %s failed", #step);   \
-    return false;                                 \
+#define EXEC_VULKAN_STEP(step)                                                                     \
+  if (!step())                                                                                     \
+  {                                                                                                \
+    LOGE("initVulkan error: %s failed", #step);                                                    \
+    return false;                                                                                  \
   }
 
   debugOutput_ = debugOutput;
@@ -95,7 +95,8 @@ bool VKContext::create(bool debugOutput) {
   vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
   std::vector<VkExtensionProperties> instanceExtensions(extensionCount);
   vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, instanceExtensions.data());
-  for (auto &ext : instanceExtensions) {
+  for (auto &ext : instanceExtensions)
+  {
     instanceExtensions_[ext.extensionName] = ext;
   }
 
@@ -123,21 +124,26 @@ bool VKContext::create(bool debugOutput) {
   return true;
 }
 
-void VKContext::destroy() {
+void VKContext::destroy()
+{
   FUNCTION_TIMED("VKContext::destroy");
 
-  for (auto &kv : uniformBufferPool_) {
-    for (auto &buff : kv.second) {
+  for (auto &kv : uniformBufferPool_)
+  {
+    for (auto &buff : kv.second)
+    {
       buff.buffer.destroy(allocator_);
       buff.mapPtr = nullptr;
       buff.inUse = false;
     }
   }
 
-  for (auto &cmd : commandBuffers_) {
+  for (auto &cmd : commandBuffers_)
+  {
     vkDestroyFence(device_, cmd.fence, nullptr);
     vkDestroySemaphore(device_, cmd.semaphore, nullptr);
-    if (cmd.cmdBuffer != VK_NULL_HANDLE) {
+    if (cmd.cmdBuffer != VK_NULL_HANDLE)
+    {
       vkFreeCommandBuffers(device_, commandPool_, 1, &cmd.cmdBuffer);
     }
   }
@@ -147,8 +153,10 @@ void VKContext::destroy() {
   vmaDestroyAllocator(allocator_);
 
   // debug output
-  if (debugOutput_) {
-    if (VKLoader::vkDestroyDebugUtilsMessengerEXT != nullptr) {
+  if (debugOutput_)
+  {
+    if (VKLoader::vkDestroyDebugUtilsMessengerEXT != nullptr)
+    {
       VKLoader::vkDestroyDebugUtilsMessengerEXT(instance_, debugMessenger_, nullptr);
     }
   }
@@ -158,10 +166,14 @@ void VKContext::destroy() {
   vkDestroyInstance(instance_, nullptr);
 }
 
-CommandBuffer *VKContext::getNewCommandBuffer() {
-  for (auto &cmd : commandBuffers_) {
-    if (!cmd.inUse) {
-      if (cmd.cmdBuffer == VK_NULL_HANDLE) {
+CommandBuffer *VKContext::getNewCommandBuffer()
+{
+  for (auto &cmd : commandBuffers_)
+  {
+    if (!cmd.inUse)
+    {
+      if (cmd.cmdBuffer == VK_NULL_HANDLE)
+      {
         allocateCommandBuffer(cmd.cmdBuffer);
       }
       cmd.inUse = true;
@@ -183,19 +195,24 @@ CommandBuffer *VKContext::getNewCommandBuffer() {
 
   commandBuffers_.push_back(cmd);
   maxCommandBufferPoolSize_ = std::max(maxCommandBufferPoolSize_, commandBuffers_.size());
-  if (maxCommandBufferPoolSize_ >= COMMAND_BUFFER_POOL_MAX_SIZE) {
+  if (maxCommandBufferPoolSize_ >= COMMAND_BUFFER_POOL_MAX_SIZE)
+  {
     LOGE("error: command buffer pool size exceed");
   }
   return &commandBuffers_.back();
 }
 
-void VKContext::purgeCommandBuffers() {
-  for (auto &cmd : commandBuffers_) {
-    if (!cmd.inUse) {
+void VKContext::purgeCommandBuffers()
+{
+  for (auto &cmd : commandBuffers_)
+  {
+    if (!cmd.inUse)
+    {
       continue;
     }
     VkResult waitRet = vkGetFenceStatus(device_, cmd.fence);
-    if (waitRet == VK_SUCCESS) {
+    if (waitRet == VK_SUCCESS)
+    {
       // reset command buffer
       vkFreeCommandBuffers(device_, commandPool_, 1, &cmd.cmdBuffer);
       cmd.cmdBuffer = VK_NULL_HANDLE;
@@ -204,13 +221,15 @@ void VKContext::purgeCommandBuffers() {
       vkResetFences(device_, 1, &cmd.fence);
 
       // reset uniform buffers
-      for (auto *buff : cmd.uniformBuffers) {
+      for (auto *buff : cmd.uniformBuffers)
+      {
         buff->inUse = false;
       }
       cmd.uniformBuffers.clear();
 
       // reset descriptor sets
-      for (auto *set : cmd.descriptorSets) {
+      for (auto *set : cmd.descriptorSets)
+      {
         set->inUse = false;
       }
       cmd.descriptorSets.clear();
@@ -221,7 +240,8 @@ void VKContext::purgeCommandBuffers() {
   }
 }
 
-CommandBuffer *VKContext::beginCommands() {
+CommandBuffer *VKContext::beginCommands()
+{
   auto *commandBuffer = getNewCommandBuffer();
 
   VkCommandBufferBeginInfo beginInfo{};
@@ -235,7 +255,8 @@ CommandBuffer *VKContext::beginCommands() {
 
 void VKContext::endCommands(CommandBuffer *commandBuffer,
                             const std::vector<VkSemaphore> &waitSemaphores,
-                            const std::vector<VkSemaphore> &signalSemaphores) {
+                            const std::vector<VkSemaphore> &signalSemaphores)
+{
   VK_CHECK(vkEndCommandBuffer(commandBuffer->cmdBuffer));
 
   VkSubmitInfo submitInfo{};
@@ -243,22 +264,30 @@ void VKContext::endCommands(CommandBuffer *commandBuffer,
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &commandBuffer->cmdBuffer;
 
-  if (!waitSemaphores.empty()) {
-    if (waitSemaphores.size() > SEMAPHORE_MAX_SIZE) {
+  if (!waitSemaphores.empty())
+  {
+    if (waitSemaphores.size() > SEMAPHORE_MAX_SIZE)
+    {
       LOGE("endCommands error: wait semaphores max size exceeded");
     }
-    static std::vector<VkPipelineStageFlags> waitStageMasks(SEMAPHORE_MAX_SIZE, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+    static std::vector<VkPipelineStageFlags> waitStageMasks(SEMAPHORE_MAX_SIZE,
+                                                            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
     submitInfo.waitSemaphoreCount = waitSemaphores.size();
     submitInfo.pWaitSemaphores = waitSemaphores.data();
     submitInfo.pWaitDstStageMask = waitStageMasks.data();
-  } else {
+  }
+  else
+  {
     submitInfo.waitSemaphoreCount = 0;
   }
 
-  if (!signalSemaphores.empty()) {
+  if (!signalSemaphores.empty())
+  {
     submitInfo.signalSemaphoreCount = signalSemaphores.size();
     submitInfo.pSignalSemaphores = signalSemaphores.data();
-  } else {
+  }
+  else
+  {
     submitInfo.signalSemaphoreCount = 0;
   }
 
@@ -266,11 +295,13 @@ void VKContext::endCommands(CommandBuffer *commandBuffer,
   purgeCommandBuffers();
 }
 
-void VKContext::waitCommands(CommandBuffer *commandBuffer) {
+void VKContext::waitCommands(CommandBuffer *commandBuffer)
+{
   VK_CHECK(vkWaitForFences(device_, 1, &commandBuffer->fence, VK_TRUE, UINT64_MAX));
 }
 
-void VKContext::allocateCommandBuffer(VkCommandBuffer &cmdBuffer) {
+void VKContext::allocateCommandBuffer(VkCommandBuffer &cmdBuffer)
+{
   VkCommandBufferAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -280,17 +311,21 @@ void VKContext::allocateCommandBuffer(VkCommandBuffer &cmdBuffer) {
   VK_CHECK(vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuffer));
 }
 
-UniformBuffer *VKContext::getNewUniformBuffer(VkDeviceSize size) {
+UniformBuffer *VKContext::getNewUniformBuffer(VkDeviceSize size)
+{
   auto it = uniformBufferPool_.find(size);
-  if (it == uniformBufferPool_.end()) {
+  if (it == uniformBufferPool_.end())
+  {
     std::vector<UniformBuffer> uboPool;
     uboPool.reserve(UNIFORM_BUFFER_POOL_MAX_SIZE);
     uniformBufferPool_[size] = std::move(uboPool);
   }
   auto &pool = uniformBufferPool_[size];
 
-  for (auto &buff : pool) {
-    if (!buff.inUse) {
+  for (auto &buff : pool)
+  {
+    if (!buff.inUse)
+    {
       buff.inUse = true;
       return &buff;
     }
@@ -302,16 +337,21 @@ UniformBuffer *VKContext::getNewUniformBuffer(VkDeviceSize size) {
   buff.mapPtr = buff.buffer.allocInfo.pMappedData;
   pool.push_back(buff);
   maxUniformBufferPoolSize_ = std::max(maxUniformBufferPoolSize_, pool.size());
-  if (maxUniformBufferPoolSize_ >= UNIFORM_BUFFER_POOL_MAX_SIZE) {
+  if (maxUniformBufferPoolSize_ >= UNIFORM_BUFFER_POOL_MAX_SIZE)
+  {
     LOGE("error: uniform buffer pool size exceed");
   }
   return &pool.back();
 }
 
-uint32_t VKContext::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties) {
-  for (uint32_t i = 0; i < deviceMemoryProperties_.memoryTypeCount; i++) {
-    if ((typeBits & 1) == 1) {
-      if ((deviceMemoryProperties_.memoryTypes[i].propertyFlags & properties) == properties) {
+uint32_t VKContext::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties)
+{
+  for (uint32_t i = 0; i < deviceMemoryProperties_.memoryTypeCount; i++)
+  {
+    if ((typeBits & 1) == 1)
+    {
+      if ((deviceMemoryProperties_.memoryTypes[i].propertyFlags & properties) == properties)
+      {
         return i;
       }
     }
@@ -320,8 +360,10 @@ uint32_t VKContext::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags 
   return VK_MAX_MEMORY_TYPES;
 }
 
-bool VKContext::createInstance() {
-  if (debugOutput_ && !checkValidationLayerSupport()) {
+bool VKContext::createInstance()
+{
+  if (debugOutput_ && !checkValidationLayerSupport())
+  {
     LOGE("validation layers requested, but not available!");
     return false;
   }
@@ -342,13 +384,17 @@ bool VKContext::createInstance() {
   createInfo.pApplicationInfo = &appInfo;
 
   auto extensions = kRequiredInstanceExtensions;
-  if (debugOutput_) {
+  if (debugOutput_)
+  {
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   }
   auto &glInteropExt = VKGLInterop::getRequiredInstanceExtensions();
-  if (extensionsExits(glInteropExt, instanceExtensions_)) {
+  if (extensionsExits(glInteropExt, instanceExtensions_))
+  {
     extensions.insert(extensions.end(), glInteropExt.begin(), glInteropExt.end());
-  } else {
+  }
+  else
+  {
     LOGE("VKGLInterop required instance extensions not found");
     VKGLInterop::setVkExtensionsAvailable(false);
   }
@@ -356,13 +402,16 @@ bool VKContext::createInstance() {
   createInfo.ppEnabledExtensionNames = extensions.data();
 
   VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-  if (debugOutput_) {
+  if (debugOutput_)
+  {
     createInfo.enabledLayerCount = static_cast<uint32_t>(kValidationLayers.size());
     createInfo.ppEnabledLayerNames = kValidationLayers.data();
 
     populateDebugMessengerCreateInfo(debugCreateInfo);
-    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
-  } else {
+    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
+  }
+  else
+  {
     createInfo.enabledLayerCount = 0;
     createInfo.pNext = nullptr;
   }
@@ -373,8 +422,10 @@ bool VKContext::createInstance() {
   return true;
 }
 
-bool VKContext::setupDebugMessenger() {
-  if (!debugOutput_) {
+bool VKContext::setupDebugMessenger()
+{
+  if (!debugOutput_)
+  {
     return true;
   }
 
@@ -382,24 +433,32 @@ bool VKContext::setupDebugMessenger() {
   populateDebugMessengerCreateInfo(createInfo);
 
   VkResult ret;
-  if (VKLoader::vkCreateDebugUtilsMessengerEXT != nullptr) {
-    ret = VKLoader::vkCreateDebugUtilsMessengerEXT(instance_, &createInfo, nullptr, &debugMessenger_);
-  } else {
+  if (VKLoader::vkCreateDebugUtilsMessengerEXT != nullptr)
+  {
+    ret =
+      VKLoader::vkCreateDebugUtilsMessengerEXT(instance_, &createInfo, nullptr, &debugMessenger_);
+  }
+  else
+  {
     ret = VK_ERROR_EXTENSION_NOT_PRESENT;
   }
 
-  if (ret != VK_SUCCESS) {
-    LOGE("VkResult: %s, %s:%d, %s", vkResultStr(ret), __FILE__, __LINE__, "vkCreateDebugUtilsMessengerEXT");
+  if (ret != VK_SUCCESS)
+  {
+    LOGE("VkResult: %s, %s:%d, %s", vkResultStr(ret), __FILE__, __LINE__,
+         "vkCreateDebugUtilsMessengerEXT");
     return false;
   }
   return true;
 }
 
-bool VKContext::pickPhysicalDevice() {
+bool VKContext::pickPhysicalDevice()
+{
   uint32_t deviceCount = 0;
   VK_CHECK(vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr));
 
-  if (deviceCount == 0) {
+  if (deviceCount == 0)
+  {
     LOGE("failed to find GPUs with Vulkan support");
     return false;
   }
@@ -407,16 +466,19 @@ bool VKContext::pickPhysicalDevice() {
   std::vector<VkPhysicalDevice> devices(deviceCount);
   VK_CHECK(vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data()));
 
-  for (const auto &device : devices) {
+  for (const auto &device : devices)
+  {
     QueueFamilyIndices indices = findQueueFamilies(device);
-    if (indices.isComplete()) {
+    if (indices.isComplete())
+    {
       queueIndices_ = indices;
       physicalDevice_ = device;
       break;
     }
   }
 
-  if (physicalDevice_ != VK_NULL_HANDLE) {
+  if (physicalDevice_ != VK_NULL_HANDLE)
+  {
     vkGetPhysicalDeviceProperties(physicalDevice_, &deviceProperties_);
     vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &deviceMemoryProperties_);
 
@@ -424,8 +486,10 @@ bool VKContext::pickPhysicalDevice() {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physicalDevice_, nullptr, &extensionCount, nullptr);
     std::vector<VkExtensionProperties> deviceExtensions(extensionCount);
-    vkEnumerateDeviceExtensionProperties(physicalDevice_, nullptr, &extensionCount, deviceExtensions.data());
-    for (auto &ext : deviceExtensions) {
+    vkEnumerateDeviceExtensionProperties(physicalDevice_, nullptr, &extensionCount,
+                                         deviceExtensions.data());
+    for (auto &ext : deviceExtensions)
+    {
       deviceExtensions_[ext.extensionName] = ext;
     }
   }
@@ -433,7 +497,8 @@ bool VKContext::pickPhysicalDevice() {
   return physicalDevice_ != VK_NULL_HANDLE;
 }
 
-bool VKContext::createLogicalDevice() {
+bool VKContext::createLogicalDevice()
+{
   VkDeviceQueueCreateInfo queueCreateInfo{};
   queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
   queueCreateInfo.queueFamilyIndex = queueIndices_.graphicsFamily;
@@ -452,19 +517,25 @@ bool VKContext::createLogicalDevice() {
 
   auto extensions = kRequiredDeviceExtensions;
   auto &glInteropExt = VKGLInterop::getRequiredDeviceExtensions();
-  if (extensionsExits(glInteropExt, deviceExtensions_)) {
+  if (extensionsExits(glInteropExt, deviceExtensions_))
+  {
     extensions.insert(extensions.end(), glInteropExt.begin(), glInteropExt.end());
-  } else {
+  }
+  else
+  {
     LOGE("VKGLInterop required device extensions not found");
     VKGLInterop::setVkExtensionsAvailable(false);
   }
   createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
   createInfo.ppEnabledExtensionNames = extensions.data();
 
-  if (debugOutput_) {
+  if (debugOutput_)
+  {
     createInfo.enabledLayerCount = static_cast<uint32_t>(kValidationLayers.size());
     createInfo.ppEnabledLayerNames = kValidationLayers.data();
-  } else {
+  }
+  else
+  {
     createInfo.enabledLayerCount = 0;
   }
 
@@ -473,7 +544,8 @@ bool VKContext::createLogicalDevice() {
   return true;
 }
 
-bool VKContext::createCommandPool() {
+bool VKContext::createCommandPool()
+{
   VkCommandPoolCreateInfo poolInfo{};
   poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
@@ -483,41 +555,48 @@ bool VKContext::createCommandPool() {
   return true;
 }
 
-bool VKContext::checkValidationLayerSupport() {
+bool VKContext::checkValidationLayerSupport()
+{
   uint32_t layerCount;
   VK_CHECK(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
 
   std::vector<VkLayerProperties> availableLayers(layerCount);
   VK_CHECK(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data()));
 
-  for (const char *layerName : kValidationLayers) {
+  for (const char *layerName : kValidationLayers)
+  {
     bool layerFound = false;
-    for (const auto &layerProperties : availableLayers) {
-      if (strcmp(layerName, layerProperties.layerName) == 0) {
+    for (const auto &layerProperties : availableLayers)
+    {
+      if (strcmp(layerName, layerProperties.layerName) == 0)
+      {
         layerFound = true;
         break;
       }
     }
-    if (!layerFound) {
+    if (!layerFound)
+    {
       return false;
     }
   }
   return true;
 }
 
-void VKContext::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) {
+void VKContext::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo)
+{
   createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-  createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-      | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-      | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-  createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-      | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
-      | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+  createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+  createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   createInfo.pfnUserCallback = vkDebugCallback;
 }
 
-QueueFamilyIndices VKContext::findQueueFamilies(VkPhysicalDevice physicalDevice) {
+QueueFamilyIndices VKContext::findQueueFamilies(VkPhysicalDevice physicalDevice)
+{
   uint32_t queueFamilyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
 
@@ -525,11 +604,14 @@ QueueFamilyIndices VKContext::findQueueFamilies(VkPhysicalDevice physicalDevice)
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
 
   QueueFamilyIndices indices;
-  for (int i = 0; i < queueFamilies.size(); i++) {
-    if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+  for (int i = 0; i < queueFamilies.size(); i++)
+  {
+    if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+    {
       indices.graphicsFamily = i;
     }
-    if (indices.isComplete()) {
+    if (indices.isComplete())
+    {
       break;
     }
   }
@@ -537,7 +619,9 @@ QueueFamilyIndices VKContext::findQueueFamilies(VkPhysicalDevice physicalDevice)
   return indices;
 }
 
-void VKContext::createGPUBuffer(AllocatedBuffer &buffer, VkDeviceSize size, VkBufferUsageFlags usage) {
+void VKContext::createGPUBuffer(AllocatedBuffer &buffer, VkDeviceSize size,
+                                VkBufferUsageFlags usage)
+{
   VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size = size;
@@ -547,10 +631,12 @@ void VKContext::createGPUBuffer(AllocatedBuffer &buffer, VkDeviceSize size, VkBu
   VmaAllocationCreateInfo allocInfo{};
   allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-  VK_CHECK(vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer.buffer, &buffer.allocation, &buffer.allocInfo));
+  VK_CHECK(vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer.buffer, &buffer.allocation,
+                           &buffer.allocInfo));
 }
 
-void VKContext::createUniformBuffer(AllocatedBuffer &buffer, VkDeviceSize size) {
+void VKContext::createUniformBuffer(AllocatedBuffer &buffer, VkDeviceSize size)
+{
   VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size = size;
@@ -561,10 +647,12 @@ void VKContext::createUniformBuffer(AllocatedBuffer &buffer, VkDeviceSize size) 
   allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
   allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
-  VK_CHECK(vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer.buffer, &buffer.allocation, &buffer.allocInfo));
+  VK_CHECK(vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer.buffer, &buffer.allocation,
+                           &buffer.allocInfo));
 }
 
-void VKContext::createStagingBuffer(AllocatedBuffer &buffer, VkDeviceSize size) {
+void VKContext::createStagingBuffer(AllocatedBuffer &buffer, VkDeviceSize size)
+{
   VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size = size;
@@ -575,11 +663,14 @@ void VKContext::createStagingBuffer(AllocatedBuffer &buffer, VkDeviceSize size) 
   allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
   allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-  VK_CHECK(vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer.buffer, &buffer.allocation, &buffer.allocInfo));
+  VK_CHECK(vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer.buffer, &buffer.allocation,
+                           &buffer.allocInfo));
 }
 
-bool VKContext::createImageMemory(AllocatedImage &image, uint32_t properties, const void *pNext) {
-  if (image.memory != VK_NULL_HANDLE) {
+bool VKContext::createImageMemory(AllocatedImage &image, uint32_t properties, const void *pNext)
+{
+  if (image.memory != VK_NULL_HANDLE)
+  {
     return true;
   }
 
@@ -592,7 +683,8 @@ bool VKContext::createImageMemory(AllocatedImage &image, uint32_t properties, co
   memAllocInfo.pNext = pNext;
   memAllocInfo.allocationSize = memReqs.size;
   memAllocInfo.memoryTypeIndex = getMemoryTypeIndex(memReqs.memoryTypeBits, properties);
-  if (memAllocInfo.memoryTypeIndex == VK_MAX_MEMORY_TYPES) {
+  if (memAllocInfo.memoryTypeIndex == VK_MAX_MEMORY_TYPES)
+  {
     LOGE("vulkan memory type not available, property flags: 0x%x", properties);
     return false;
   }
@@ -602,25 +694,31 @@ bool VKContext::createImageMemory(AllocatedImage &image, uint32_t properties, co
   return true;
 }
 
-bool VKContext::linearBlitAvailable(VkFormat format) {
+bool VKContext::linearBlitAvailable(VkFormat format)
+{
   VkFormatProperties formatProperties;
   vkGetPhysicalDeviceFormatProperties(physicalDevice_, format, &formatProperties);
 
-  if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
+  if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+  {
     return false;
   }
 
   return true;
 }
 
-bool VKContext::extensionsExits(const std::vector<const char *> &requiredExtensions,
-                                const std::unordered_map<std::string, VkExtensionProperties> &availableExtensions) {
-  for (auto &reqExt : requiredExtensions) {
-    if (availableExtensions.find(reqExt) == availableExtensions.end()) {
+bool VKContext::extensionsExits(
+  const std::vector<const char *> &requiredExtensions,
+  const std::unordered_map<std::string, VkExtensionProperties> &availableExtensions)
+{
+  for (auto &reqExt : requiredExtensions)
+  {
+    if (availableExtensions.find(reqExt) == availableExtensions.end())
+    {
       return false;
     }
   }
   return true;
 }
 
-}
+} // namespace SoftGL

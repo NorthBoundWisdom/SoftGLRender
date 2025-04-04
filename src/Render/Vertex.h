@@ -6,26 +6,31 @@
 
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
+
 #include "Base/GLMInc.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class VertexArrayObject {
- public:
+class VertexArrayObject
+{
+  public:
   virtual int getId() const = 0;
   virtual void updateVertexData(void *data, size_t length) = 0;
 };
 
 // only support float type attributes
-struct VertexAttributeDesc {
+struct VertexAttributeDesc
+{
   size_t size;
   size_t stride;
   size_t offset;
 };
 
-struct VertexArray {
+struct VertexArray
+{
   size_t vertexSize = 0;
   std::vector<VertexAttributeDesc> vertexesDesc;
 
@@ -36,4 +41,4 @@ struct VertexArray {
   size_t indexBufferLength = 0;
 };
 
-}
+} // namespace SoftGL

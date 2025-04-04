@@ -5,15 +5,18 @@
  */
 
 #include "VKGLInterop.h"
+
 #include "Base/Logger.h"
 #include "Render/OpenGL/OpenGLUtils.h"
 #include "Render/Vulkan/VulkanUtils.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
 #ifdef PLATFORM_WINDOWS
 constexpr const char *HOST_MEMORY_EXTENSION_NAME = VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME;
-constexpr const char *HOST_SEMAPHORE_EXTENSION_NAME = VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME;
+constexpr const char *HOST_SEMAPHORE_EXTENSION_NAME =
+  VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME;
 #else
 constexpr const char *HOST_MEMORY_EXTENSION_NAME = VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME;
 constexpr const char *HOST_SEMAPHORE_EXTENSION_NAME = VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME;
@@ -25,19 +28,21 @@ VkExternalMemoryImageCreateInfo VKGLInterop::extMemoryImageCreateInfo_{};
 VkExportMemoryAllocateInfo VKGLInterop::exportMemoryAllocateInfo_{};
 
 const std::vector<const char *> VKGLInterop::requiredInstanceExtensions = {
-    VK_KHR_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME,
-    VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
+  VK_KHR_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME,
+  VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
 };
 
 const std::vector<const char *> VKGLInterop::requiredDeviceExtensions = {
-    VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
-    VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
-    HOST_SEMAPHORE_EXTENSION_NAME,
-    HOST_MEMORY_EXTENSION_NAME,
+  VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
+  VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
+  HOST_SEMAPHORE_EXTENSION_NAME,
+  HOST_MEMORY_EXTENSION_NAME,
 };
 
-VKGLInterop::~VKGLInterop() {
-  if (!isAvailable()) {
+VKGLInterop::~VKGLInterop()
+{
+  if (!isAvailable())
+  {
     return;
   }
 
@@ -50,22 +55,26 @@ VKGLInterop::~VKGLInterop() {
   GL_CHECK(glDeleteMemoryObjectsEXT(1, &sharedMemory_.glRef));
 }
 
-void VKGLInterop::checkFunctionsAvailable() {
+void VKGLInterop::checkFunctionsAvailable()
+{
   // check gl extensions
-  if (!glGenSemaphoresEXT || !glImportSemaphore || !glDeleteSemaphoresEXT
-      || !glWaitSemaphoreEXT || !glSignalSemaphoreEXT) {
+  if (!glGenSemaphoresEXT || !glImportSemaphore || !glDeleteSemaphoresEXT || !glWaitSemaphoreEXT ||
+      !glSignalSemaphoreEXT)
+  {
     LOGE("VKGLInterop::checkFunctionsAvailable failed: gl extern semaphore functions not found");
     return;
   }
 
-  if (!glCreateMemoryObjectsEXT || !glImportMemory || !glDeleteMemoryObjectsEXT
-      || !glTextureStorageMem2DEXT) {
+  if (!glCreateMemoryObjectsEXT || !glImportMemory || !glDeleteMemoryObjectsEXT ||
+      !glTextureStorageMem2DEXT)
+  {
     LOGE("VKGLInterop::checkFunctionsAvailable failed: gl extern memory functions not found");
     return;
   }
 
   // check vulkan extensions
-  if (!vkGetSemaphoreHandle || !vkGetMemoryHandle) {
+  if (!vkGetSemaphoreHandle || !vkGetMemoryHandle)
+  {
     LOGE("VKGLInterop::checkFunctionsAvailable failed: vulkan extension functions not found");
     return;
   }
@@ -80,7 +89,8 @@ void VKGLInterop::checkFunctionsAvailable() {
   functionsAvailable_ = true;
 }
 
-void VKGLInterop::createSharedSemaphores() {
+void VKGLInterop::createSharedSemaphores()
+{
   // create vulkan object
   VkExportSemaphoreCreateInfo exportSemaphoreCreateInfo{};
   exportSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO;
@@ -110,7 +120,8 @@ void VKGLInterop::createSharedSemaphores() {
   GL_CHECK(glImportSemaphore(glComplete_.glRef, GL_HANDLE_TYPE, glComplete_.handle));
 }
 
-void VKGLInterop::createSharedMemory(VkDeviceMemory memory, VkDeviceSize allocationSize) {
+void VKGLInterop::createSharedMemory(VkDeviceMemory memory, VkDeviceSize allocationSize)
+{
   VkMemoryGetHandleInfo memoryGetInfo{};
   memoryGetInfo.sType = VK_STRUCTURE_TYPE_MEMORY_GET_HANDLE_INFO;
   memoryGetInfo.memory = memory;
@@ -122,23 +133,31 @@ void VKGLInterop::createSharedMemory(VkDeviceMemory memory, VkDeviceSize allocat
 
   // create opengl object
   GL_CHECK(glCreateMemoryObjectsEXT(1, &sharedMemory_.glRef));
-  GL_CHECK(glImportMemory(sharedMemory_.glRef, sharedMemory_.allocationSize, GL_HANDLE_TYPE, sharedMemory_.handle));
+  GL_CHECK(glImportMemory(sharedMemory_.glRef, sharedMemory_.allocationSize, GL_HANDLE_TYPE,
+                          sharedMemory_.handle));
 }
 
-void VKGLInterop::setGLTexture2DStorage(GLuint texture, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height) {
+void VKGLInterop::setGLTexture2DStorage(GLuint texture, GLsizei levels, GLenum internalFormat,
+                                        GLsizei width, GLsizei height)
+{
   sharedMemory_.glAttachedTexture = texture;
-  GL_CHECK(glTextureStorageMem2DEXT(texture, levels, internalFormat, width, height, sharedMemory_.glRef, 0));
+  GL_CHECK(glTextureStorageMem2DEXT(texture, levels, internalFormat, width, height,
+                                    sharedMemory_.glRef, 0));
 }
 
-void VKGLInterop::waitGLReady() {
+void VKGLInterop::waitGLReady()
+{
   GLenum srcLayout = GL_LAYOUT_COLOR_ATTACHMENT_EXT;
-  GL_CHECK(glWaitSemaphoreEXT(glReady_.glRef, 0, nullptr, 1, &sharedMemory_.glAttachedTexture, &srcLayout));
+  GL_CHECK(glWaitSemaphoreEXT(glReady_.glRef, 0, nullptr, 1, &sharedMemory_.glAttachedTexture,
+                              &srcLayout));
 }
 
-void VKGLInterop::signalGLComplete() {
+void VKGLInterop::signalGLComplete()
+{
   GLenum dstLayout = GL_LAYOUT_SHADER_READ_ONLY_EXT;
-  GL_CHECK(glSignalSemaphoreEXT(glComplete_.glRef, 0, nullptr, 1, &sharedMemory_.glAttachedTexture, &dstLayout));
+  GL_CHECK(glSignalSemaphoreEXT(glComplete_.glRef, 0, nullptr, 1, &sharedMemory_.glAttachedTexture,
+                                &dstLayout));
   GL_CHECK(glFlush());
 }
 
-}
+} // namespace SoftGL

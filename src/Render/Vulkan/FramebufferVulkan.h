@@ -11,48 +11,63 @@
 #include "Render/Vulkan/TextureVulkan.h"
 #include "VKContext.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-struct FrameBufferContainerVK {
+struct FrameBufferContainerVK
+{
   std::vector<VkImageView> attachments;
   VkFramebuffer framebuffer = VK_NULL_HANDLE;
 };
 
-class FrameBufferVulkan : public FrameBuffer {
- public:
-  FrameBufferVulkan(VKContext &ctx, bool offscreen) : FrameBuffer(offscreen), vkCtx_(ctx) {
+class FrameBufferVulkan : public FrameBuffer
+{
+  public:
+  FrameBufferVulkan(VKContext &ctx, bool offscreen)
+    : FrameBuffer(offscreen)
+    , vkCtx_(ctx)
+  {
     device_ = ctx.device();
   }
 
-  virtual ~FrameBufferVulkan() {
-    for (auto &pass : renderPassCache_) {
+  virtual ~FrameBufferVulkan()
+  {
+    for (auto &pass : renderPassCache_)
+    {
       vkDestroyRenderPass(device_, pass, nullptr);
     }
 
-    for (auto &fbo : fboCache_) {
+    for (auto &fbo : fboCache_)
+    {
       vkDestroyFramebuffer(device_, fbo.framebuffer, nullptr);
 
-      for (auto &view : fbo.attachments) {
+      for (auto &view : fbo.attachments)
+      {
         vkDestroyImageView(device_, view, nullptr);
       }
     }
   }
 
-  int getId() const override {
+  int getId() const override
+  {
     return uuid_.get();
   }
 
-  bool isValid() override {
+  bool isValid() override
+  {
     return colorReady_ || depthReady_;
   }
 
-  void setColorAttachment(std::shared_ptr<Texture> &color, int level) override {
-    if (color == colorAttachment_.tex && level == colorAttachment_.level) {
+  void setColorAttachment(std::shared_ptr<Texture> &color, int level) override
+  {
+    if (color == colorAttachment_.tex && level == colorAttachment_.level)
+    {
       return;
     }
 
     fboDirty_ = true;
-    if (color != colorAttachment_.tex) {
+    if (color != colorAttachment_.tex)
+    {
       renderPassDirty_ = true;
     }
 
@@ -61,13 +76,17 @@ class FrameBufferVulkan : public FrameBuffer {
     height_ = color->getLevelHeight(level);
   }
 
-  void setColorAttachment(std::shared_ptr<Texture> &color, CubeMapFace face, int level) override {
-    if (color == colorAttachment_.tex && face == colorAttachment_.layer && level == colorAttachment_.level) {
+  void setColorAttachment(std::shared_ptr<Texture> &color, CubeMapFace face, int level) override
+  {
+    if (color == colorAttachment_.tex && face == colorAttachment_.layer &&
+        level == colorAttachment_.level)
+    {
       return;
     }
 
     fboDirty_ = true;
-    if (color != colorAttachment_.tex) {
+    if (color != colorAttachment_.tex)
+    {
       renderPassDirty_ = true;
     }
 
@@ -76,8 +95,10 @@ class FrameBufferVulkan : public FrameBuffer {
     height_ = color->getLevelHeight(level);
   }
 
-  void setDepthAttachment(std::shared_ptr<Texture> &depth) override {
-    if (depth == depthAttachment_.tex) {
+  void setDepthAttachment(std::shared_ptr<Texture> &depth) override
+  {
+    if (depth == depthAttachment_.tex)
+    {
       return;
     }
 
@@ -89,21 +110,25 @@ class FrameBufferVulkan : public FrameBuffer {
     height_ = depth->height;
   }
 
-  bool create(const ClearStates &states) {
-    if (!isValid()) {
+  bool create(const ClearStates &states)
+  {
+    if (!isValid())
+    {
       return false;
     }
     clearStates_ = states;
 
     bool success = true;
 
-    if (renderPassDirty_) {
+    if (renderPassDirty_)
+    {
       renderPassDirty_ = false;
       renderPassCache_.emplace_back();
       currRenderPass_ = &renderPassCache_.back();
       success = createVkRenderPass();
     }
-    if (success && fboDirty_) {
+    if (success && fboDirty_)
+    {
       fboDirty_ = false;
       fboCache_.emplace_back();
       currFbo_ = &fboCache_.back();
@@ -113,47 +138,59 @@ class FrameBufferVulkan : public FrameBuffer {
     return success;
   }
 
-  inline ClearStates &getClearStates() {
+  inline ClearStates &getClearStates()
+  {
     return clearStates_;
   }
 
-  inline VkRenderPass &getRenderPass() {
+  inline VkRenderPass &getRenderPass()
+  {
     return *currRenderPass_;
   }
 
-  inline VkFramebuffer &getVkFramebuffer() {
+  inline VkFramebuffer &getVkFramebuffer()
+  {
     return currFbo_->framebuffer;
   }
 
-  inline VkSampleCountFlagBits getSampleCount() {
-    if (colorReady_) {
+  inline VkSampleCountFlagBits getSampleCount()
+  {
+    if (colorReady_)
+    {
       return getAttachmentColor()->getSampleCount();
     }
 
-    if (depthReady_) {
+    if (depthReady_)
+    {
       return getAttachmentDepth()->getSampleCount();
     }
 
     return VK_SAMPLE_COUNT_1_BIT;
   }
 
-  inline uint32_t width() const {
+  inline uint32_t width() const
+  {
     return width_;
   }
 
-  inline uint32_t height() const {
+  inline uint32_t height() const
+  {
     return height_;
   }
 
-  inline TextureVulkan *getAttachmentColor() {
-    if (colorReady_) {
+  inline TextureVulkan *getAttachmentColor()
+  {
+    if (colorReady_)
+    {
       return dynamic_cast<TextureVulkan *>(colorAttachment_.tex.get());
     }
     return nullptr;
   }
 
-  inline TextureVulkan *getAttachmentDepth() {
-    if (depthReady_) {
+  inline TextureVulkan *getAttachmentDepth()
+  {
+    if (depthReady_)
+    {
       return dynamic_cast<TextureVulkan *>(depthAttachment_.tex.get());
     }
     return nullptr;
@@ -165,11 +202,11 @@ class FrameBufferVulkan : public FrameBuffer {
   std::vector<VkSemaphore> &getAttachmentsSemaphoresWait();
   std::vector<VkSemaphore> &getAttachmentsSemaphoresSignal();
 
- private:
+  private:
   bool createVkRenderPass();
   bool createVkFramebuffer();
 
- private:
+  private:
   UUID<FrameBufferVulkan> uuid_;
   VKContext &vkCtx_;
   VkDevice device_ = VK_NULL_HANDLE;
@@ -193,4 +230,4 @@ class FrameBufferVulkan : public FrameBuffer {
   std::vector<FrameBufferContainerVK> fboCache_;
 };
 
-}
+} // namespace SoftGL

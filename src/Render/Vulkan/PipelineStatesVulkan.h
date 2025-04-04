@@ -7,61 +7,73 @@
 #pragma once
 
 #include <unordered_map>
-#include "Base/UUID.h"
+
 #include "Base/HashUtils.h"
+#include "Base/UUID.h"
 #include "Render/PipelineStates.h"
 #include "ShaderProgramVulkan.h"
 #include "VKContext.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-struct PipelineContainerVK {
+struct PipelineContainerVK
+{
   VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
   VkPipeline graphicsPipeline_ = VK_NULL_HANDLE;
 };
 
-class PipelineStatesVulkan : public PipelineStates {
- public:
+class PipelineStatesVulkan : public PipelineStates
+{
+  public:
   PipelineStatesVulkan(VKContext &ctx, const RenderStates &states)
-      : vkCtx_(ctx), PipelineStates(states) {
+    : vkCtx_(ctx)
+    , PipelineStates(states)
+  {
     device_ = ctx.device();
   }
 
-  ~PipelineStatesVulkan() override {
-    for (auto &kv : pipelineCache_) {
+  ~PipelineStatesVulkan() override
+  {
+    for (auto &kv : pipelineCache_)
+    {
       vkDestroyPipeline(device_, kv.second.graphicsPipeline_, nullptr);
       vkDestroyPipelineLayout(device_, kv.second.pipelineLayout_, nullptr);
     }
     pipelineCache_.clear();
   }
 
-  void create(VkPipelineVertexInputStateCreateInfo &vertexInputInfo,
-              ShaderProgramVulkan *program,
-              VkRenderPass &renderPass,
-              VkSampleCountFlagBits sampleCount) {
+  void create(VkPipelineVertexInputStateCreateInfo &vertexInputInfo, ShaderProgramVulkan *program,
+              VkRenderPass &renderPass, VkSampleCountFlagBits sampleCount)
+  {
     size_t cacheKey = getPipelineCacheKey(program, renderPass, sampleCount);
     auto it = pipelineCache_.find(cacheKey);
-    if (it != pipelineCache_.end()) {
+    if (it != pipelineCache_.end())
+    {
       currPipeline_ = it->second;
-    } else {
+    }
+    else
+    {
       currPipeline_ = createGraphicsPipeline(vertexInputInfo, program, renderPass, sampleCount);
       pipelineCache_[cacheKey] = currPipeline_;
     }
   }
 
-  inline VkPipeline getGraphicsPipeline() const {
+  inline VkPipeline getGraphicsPipeline() const
+  {
     return currPipeline_.graphicsPipeline_;
   }
 
-  inline VkPipelineLayout getGraphicsPipelineLayout() const {
+  inline VkPipelineLayout getGraphicsPipelineLayout() const
+  {
     return currPipeline_.pipelineLayout_;
   }
 
- private:
+  private:
   PipelineContainerVK createGraphicsPipeline(VkPipelineVertexInputStateCreateInfo &vertexInputInfo,
-                                             ShaderProgramVulkan *program,
-                                             VkRenderPass &renderPass,
-                                             VkSampleCountFlagBits sampleCount) {
+                                             ShaderProgramVulkan *program, VkRenderPass &renderPass,
+                                             VkSampleCountFlagBits sampleCount)
+  {
     PipelineContainerVK ret{};
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -78,7 +90,8 @@ class PipelineStatesVulkan : public PipelineStates {
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK::cvtPolygonMode(renderStates.polygonMode);  // ignore VkPhysicalDeviceFeatures->fillModeNonSolid
+    rasterizer.polygonMode = VK::cvtPolygonMode(
+      renderStates.polygonMode); // ignore VkPhysicalDeviceFeatures->fillModeNonSolid
     rasterizer.lineWidth = renderStates.lineWidth;
     rasterizer.cullMode = renderStates.cullFace ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
@@ -100,15 +113,20 @@ class PipelineStatesVulkan : public PipelineStates {
     depthStencil.stencilTestEnable = VK_FALSE;
 
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-    colorBlendAttachment.colorWriteMask =
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                                          VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachment.blendEnable = renderStates.blend ? VK_TRUE : VK_FALSE;
     colorBlendAttachment.colorBlendOp = VK::cvtBlendFunction(renderStates.blendParams.blendFuncRgb);
-    colorBlendAttachment.srcColorBlendFactor = VK::cvtBlendFactor(renderStates.blendParams.blendSrcRgb);
-    colorBlendAttachment.dstColorBlendFactor = VK::cvtBlendFactor(renderStates.blendParams.blendDstRgb);
-    colorBlendAttachment.alphaBlendOp = VK::cvtBlendFunction(renderStates.blendParams.blendFuncAlpha);
-    colorBlendAttachment.srcAlphaBlendFactor = VK::cvtBlendFactor(renderStates.blendParams.blendSrcAlpha);
-    colorBlendAttachment.dstAlphaBlendFactor = VK::cvtBlendFactor(renderStates.blendParams.blendDstAlpha);
+    colorBlendAttachment.srcColorBlendFactor =
+      VK::cvtBlendFactor(renderStates.blendParams.blendSrcRgb);
+    colorBlendAttachment.dstColorBlendFactor =
+      VK::cvtBlendFactor(renderStates.blendParams.blendDstRgb);
+    colorBlendAttachment.alphaBlendOp =
+      VK::cvtBlendFunction(renderStates.blendParams.blendFuncAlpha);
+    colorBlendAttachment.srcAlphaBlendFactor =
+      VK::cvtBlendFactor(renderStates.blendParams.blendSrcAlpha);
+    colorBlendAttachment.dstAlphaBlendFactor =
+      VK::cvtBlendFactor(renderStates.blendParams.blendDstAlpha);
 
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -122,8 +140,8 @@ class PipelineStatesVulkan : public PipelineStates {
     colorBlending.blendConstants[3] = 0.0f;
 
     std::vector<VkDynamicState> dynamicStates = {
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR,
+      VK_DYNAMIC_STATE_VIEWPORT,
+      VK_DYNAMIC_STATE_SCISSOR,
     };
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -159,24 +177,25 @@ class PipelineStatesVulkan : public PipelineStates {
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    VK_CHECK(vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &ret.graphicsPipeline_));
+    VK_CHECK(vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
+                                       &ret.graphicsPipeline_));
 
     return ret;
   }
 
-  static size_t getPipelineCacheKey(ShaderProgramVulkan *program,
-                                    VkRenderPass &renderPass,
-                                    VkSampleCountFlagBits sampleCount) {
+  static size_t getPipelineCacheKey(ShaderProgramVulkan *program, VkRenderPass &renderPass,
+                                    VkSampleCountFlagBits sampleCount)
+  {
     size_t seed = 0;
 
-    HashUtils::hashCombine(seed, (void *) program);
-    HashUtils::hashCombine(seed, (void *) renderPass);
-    HashUtils::hashCombine(seed, (uint32_t) sampleCount);
+    HashUtils::hashCombine(seed, (void *)program);
+    HashUtils::hashCombine(seed, (void *)renderPass);
+    HashUtils::hashCombine(seed, (uint32_t)sampleCount);
 
     return seed;
   }
 
- private:
+  private:
   VKContext &vkCtx_;
   VkDevice device_ = VK_NULL_HANDLE;
 
@@ -184,4 +203,4 @@ class PipelineStatesVulkan : public PipelineStates {
   std::unordered_map<size_t, PipelineContainerVK> pipelineCache_;
 };
 
-}
+} // namespace SoftGL

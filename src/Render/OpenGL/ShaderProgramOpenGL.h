@@ -7,47 +7,57 @@
 #pragma once
 
 #include <unordered_map>
+
 #include "Base/FileUtils.h"
-#include "Render/ShaderProgram.h"
 #include "GLSLUtils.h"
+#include "Render/ShaderProgram.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class ShaderProgramOpenGL : public ShaderProgram {
- public:
-  int getId() const override {
-    return (int) programId_;
+class ShaderProgramOpenGL : public ShaderProgram
+{
+  public:
+  int getId() const override
+  {
+    return (int)programId_;
   }
 
-  void addDefine(const std::string &def) override {
+  void addDefine(const std::string &def) override
+  {
     programGLSL_.addDefine(def);
   }
 
-  bool compileAndLinkFile(const std::string &vsPath, const std::string &fsPath) {
+  bool compileAndLinkFile(const std::string &vsPath, const std::string &fsPath)
+  {
     return compileAndLink(FileUtils::readText(vsPath), FileUtils::readText(fsPath));
   }
 
-  bool compileAndLink(const std::string &vsSource, const std::string &fsSource) {
+  bool compileAndLink(const std::string &vsSource, const std::string &fsSource)
+  {
     bool ret = programGLSL_.loadSource(vsSource, fsSource);
     programId_ = programGLSL_.getId();
     return ret;
   }
 
-  inline void use() {
+  inline void use()
+  {
     programGLSL_.use();
     uniformBlockBinding_ = 0;
     uniformSamplerBinding_ = 0;
   }
 
-  inline int getUniformBlockBinding() {
+  inline int getUniformBlockBinding()
+  {
     return uniformBlockBinding_++;
   }
 
-  inline int getUniformSamplerBinding() {
+  inline int getUniformSamplerBinding()
+  {
     return uniformSamplerBinding_++;
   }
 
- private:
+  private:
   GLuint programId_ = 0;
   ProgramGLSL programGLSL_;
 
@@ -55,4 +65,4 @@ class ShaderProgramOpenGL : public ShaderProgram {
   int uniformSamplerBinding_ = 0;
 };
 
-}
+} // namespace SoftGL

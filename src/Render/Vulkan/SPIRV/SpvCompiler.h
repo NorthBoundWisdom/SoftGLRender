@@ -6,25 +6,29 @@
 
 #pragma once
 
-#include <vector>
-#include <unordered_map>
-#include <string>
 #include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-enum ShaderStage {
+enum ShaderStage
+{
   ShaderStage_Vertex,
   ShaderStage_Fragment,
 };
 
-enum ShaderUniformType {
+enum ShaderUniformType
+{
   UniformType_Unknown = 0,
   UniformType_Sampler = 1,
   UniformType_Block = 2,
 };
 
-struct ShaderUniformDesc {
+struct ShaderUniformDesc
+{
   std::string name;
   ShaderUniformType type = UniformType_Unknown;
   int location = 0;
@@ -32,18 +36,20 @@ struct ShaderUniformDesc {
   int set = 0;
 };
 
-struct ShaderCompilerResult {
+struct ShaderCompilerResult
+{
   std::vector<uint32_t> spvCodes;
   std::unordered_map<std::string, ShaderUniformDesc> uniformsDesc;
 };
 
-class SpvCompiler {
- public:
+class SpvCompiler
+{
+  public:
   static ShaderCompilerResult compileVertexShader(const char *shaderSource);
   static ShaderCompilerResult compileFragmentShader(const char *shaderSource);
 
- private:
+  private:
   static ShaderCompilerResult compileShader(const char *shaderSource, ShaderStage stage);
 };
 
-}
+} // namespace SoftGL

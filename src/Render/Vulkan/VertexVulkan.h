@@ -6,19 +6,23 @@
 
 #pragma once
 
-#include "Base/UUID.h"
 #include "Base/Timer.h"
+#include "Base/UUID.h"
 #include "Render/Vertex.h"
 #include "VulkanUtils.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-class VertexArrayObjectVulkan : public VertexArrayObject {
- public:
+class VertexArrayObjectVulkan : public VertexArrayObject
+{
+  public:
   VertexArrayObjectVulkan(VKContext &ctx, const VertexArray &vertexArr)
-      : vkCtx_(ctx) {
+    : vkCtx_(ctx)
+  {
     device_ = ctx.device();
-    if (!vertexArr.vertexesBuffer || !vertexArr.indexBuffer) {
+    if (!vertexArr.vertexesBuffer || !vertexArr.indexBuffer)
+    {
       return;
     }
     indicesCnt_ = vertexArr.indexBufferLength / sizeof(int32_t);
@@ -30,7 +34,8 @@ class VertexArrayObjectVulkan : public VertexArrayObject {
 
     size_t attrCnt = vertexArr.vertexesDesc.size();
     attributeDescriptions_.resize(attrCnt);
-    for (size_t i = 0; i < attrCnt; i++) {
+    for (size_t i = 0; i < attrCnt; i++)
+    {
       auto &attrDesc = vertexArr.vertexesDesc[i];
       attributeDescriptions_[i].binding = 0;
       attributeDescriptions_[i].location = i;
@@ -45,67 +50,79 @@ class VertexArrayObjectVulkan : public VertexArrayObject {
     vertexInputInfo_.pVertexAttributeDescriptions = attributeDescriptions_.data();
 
     // create buffers
-    vkCtx_.createGPUBuffer(vertexBuffer_, vertexArr.vertexesBufferLength, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-    vkCtx_.createGPUBuffer(indexBuffer_, vertexArr.indexBufferLength, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    vkCtx_.createGPUBuffer(vertexBuffer_, vertexArr.vertexesBufferLength,
+                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    vkCtx_.createGPUBuffer(indexBuffer_, vertexArr.indexBufferLength,
+                           VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
     vkCtx_.createStagingBuffer(vertexStagingBuffer_, vertexArr.vertexesBufferLength);
     vkCtx_.createStagingBuffer(indexStagingBuffer_, vertexArr.indexBufferLength);
 
     // upload data
-    uploadBufferData(vertexBuffer_, vertexStagingBuffer_, vertexArr.vertexesBuffer, vertexArr.vertexesBufferLength,
-                     VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
-    uploadBufferData(indexBuffer_, indexStagingBuffer_, vertexArr.indexBuffer, vertexArr.indexBufferLength,
-                     VK_ACCESS_INDEX_READ_BIT);
+    uploadBufferData(vertexBuffer_, vertexStagingBuffer_, vertexArr.vertexesBuffer,
+                     vertexArr.vertexesBufferLength, VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+    uploadBufferData(indexBuffer_, indexStagingBuffer_, vertexArr.indexBuffer,
+                     vertexArr.indexBufferLength, VK_ACCESS_INDEX_READ_BIT);
   }
 
-  ~VertexArrayObjectVulkan() {
+  ~VertexArrayObjectVulkan()
+  {
     vertexBuffer_.destroy(vkCtx_.allocator());
     vertexStagingBuffer_.destroy(vkCtx_.allocator());
     indexBuffer_.destroy(vkCtx_.allocator());
     indexStagingBuffer_.destroy(vkCtx_.allocator());
   }
 
-  int getId() const override {
+  int getId() const override
+  {
     return uuid_.get();
   }
 
-  void updateVertexData(void *data, size_t length) override {
-    uploadBufferData(vertexBuffer_, vertexStagingBuffer_, data, length, VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+  void updateVertexData(void *data, size_t length) override
+  {
+    uploadBufferData(vertexBuffer_, vertexStagingBuffer_, data, length,
+                     VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
   }
 
   // only Float element
-  static VkFormat vertexAttributeFormat(size_t size) {
-    switch (size) {
-      case 1: return VK_FORMAT_R32_SFLOAT;
-      case 2: return VK_FORMAT_R32G32_SFLOAT;
-      case 3: return VK_FORMAT_R32G32B32_SFLOAT;
-      case 4: return VK_FORMAT_R32G32B32A32_SFLOAT;
-      default:
-        break;
+  static VkFormat vertexAttributeFormat(size_t size)
+  {
+    switch (size)
+    {
+    case 1: return VK_FORMAT_R32_SFLOAT;
+    case 2: return VK_FORMAT_R32G32_SFLOAT;
+    case 3: return VK_FORMAT_R32G32B32_SFLOAT;
+    case 4: return VK_FORMAT_R32G32B32A32_SFLOAT;
+    default: break;
     }
     return VK_FORMAT_UNDEFINED;
   }
 
-  inline VkPipelineVertexInputStateCreateInfo &getVertexInputInfo() {
+  inline VkPipelineVertexInputStateCreateInfo &getVertexInputInfo()
+  {
     return vertexInputInfo_;
   }
 
-  inline uint32_t getIndicesCnt() const {
+  inline uint32_t getIndicesCnt() const
+  {
     return indicesCnt_;
   }
 
-  inline VkBuffer &getVertexBuffer() {
+  inline VkBuffer &getVertexBuffer()
+  {
     return vertexBuffer_.buffer;
   }
 
-  inline VkBuffer &getIndexBuffer() {
+  inline VkBuffer &getIndexBuffer()
+  {
     return indexBuffer_.buffer;
   }
 
- private:
-  void uploadBufferData(AllocatedBuffer &buffer, AllocatedBuffer &stagingBuffer, void *bufferData, VkDeviceSize bufferSize,
-                        VkAccessFlags dstAccessMask) {
-    memcpy(stagingBuffer.allocInfo.pMappedData, bufferData, (size_t) bufferSize);
+  private:
+  void uploadBufferData(AllocatedBuffer &buffer, AllocatedBuffer &stagingBuffer, void *bufferData,
+                        VkDeviceSize bufferSize, VkAccessFlags dstAccessMask)
+  {
+    memcpy(stagingBuffer.allocInfo.pMappedData, bufferData, (size_t)bufferSize);
 
     auto *commandBuffer = vkCtx_.beginCommands();
 
@@ -124,12 +141,13 @@ class VertexArrayObjectVulkan : public VertexArrayObject {
     barrier.offset = 0;
     barrier.size = VK_WHOLE_SIZE;
     vkCmdPipelineBarrier(commandBuffer->cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                         VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+                         VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, 0, 0,
+                         nullptr, 1, &barrier, 0, nullptr);
 
     vkCtx_.endCommands(commandBuffer);
   }
 
- private:
+  private:
   UUID<VertexArrayObjectVulkan> uuid_;
   VKContext &vkCtx_;
   VkDevice device_ = VK_NULL_HANDLE;
@@ -147,4 +165,4 @@ class VertexArrayObjectVulkan : public VertexArrayObject {
   AllocatedBuffer indexStagingBuffer_{};
 };
 
-}
+} // namespace SoftGL

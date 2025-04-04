@@ -6,22 +6,26 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
+
 #include "Base/Buffer.h"
 #include "Base/GLMInc.h"
 
-namespace SoftGL {
+namespace SoftGL
+{
 
-enum WrapMode {
+enum WrapMode
+{
   Wrap_REPEAT,
   Wrap_MIRRORED_REPEAT,
   Wrap_CLAMP_TO_EDGE,
   Wrap_CLAMP_TO_BORDER,
 };
 
-enum FilterMode {
+enum FilterMode
+{
   Filter_NEAREST,
   Filter_LINEAR,
   Filter_NEAREST_MIPMAP_NEAREST,
@@ -30,7 +34,8 @@ enum FilterMode {
   Filter_LINEAR_MIPMAP_LINEAR,
 };
 
-enum CubeMapFace {
+enum CubeMapFace
+{
   TEXTURE_CUBE_MAP_POSITIVE_X = 0,
   TEXTURE_CUBE_MAP_NEGATIVE_X = 1,
   TEXTURE_CUBE_MAP_POSITIVE_Y = 2,
@@ -39,12 +44,14 @@ enum CubeMapFace {
   TEXTURE_CUBE_MAP_NEGATIVE_Z = 5,
 };
 
-enum BorderColor {
+enum BorderColor
+{
   Border_BLACK = 0,
   Border_WHITE,
 };
 
-struct SamplerDesc {
+struct SamplerDesc
+{
   FilterMode filterMin = Filter_NEAREST;
   FilterMode filterMag = Filter_NEAREST;
 
@@ -55,17 +62,20 @@ struct SamplerDesc {
   BorderColor borderColor = Border_BLACK;
 };
 
-enum TextureType {
+enum TextureType
+{
   TextureType_2D,
   TextureType_CUBE,
 };
 
-enum TextureFormat {
-  TextureFormat_RGBA8 = 0,      // RGBA8888
-  TextureFormat_FLOAT32 = 1,    // Float32
+enum TextureFormat
+{
+  TextureFormat_RGBA8 = 0,   // RGBA8888
+  TextureFormat_FLOAT32 = 1, // Float32
 };
 
-enum TextureUsage {
+enum TextureUsage
+{
   TextureUsage_Sampler = 1 << 0,
   TextureUsage_UploadData = 1 << 1,
   TextureUsage_AttachmentColor = 1 << 2,
@@ -73,7 +83,8 @@ enum TextureUsage {
   TextureUsage_RendererOutput = 1 << 4,
 };
 
-struct TextureDesc {
+struct TextureDesc
+{
   int width = 0;
   int height = 0;
   TextureType type = TextureType_2D;
@@ -84,15 +95,18 @@ struct TextureDesc {
   std::string tag;
 };
 
-class Texture : public TextureDesc {
- public:
+class Texture : public TextureDesc
+{
+  public:
   virtual ~Texture() = default;
 
-  inline uint32_t getLevelWidth(uint32_t level) {
+  inline uint32_t getLevelWidth(uint32_t level)
+  {
     return std::max(1, width >> level);
   }
 
-  inline uint32_t getLevelHeight(uint32_t level) {
+  inline uint32_t getLevelHeight(uint32_t level)
+  {
     return std::max(1, height >> level);
   }
 
@@ -104,4 +118,4 @@ class Texture : public TextureDesc {
   virtual void dumpImage(const char *path, uint32_t layer, uint32_t level) = 0;
 };
 
-}
+} // namespace SoftGL
