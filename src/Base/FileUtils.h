@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include <fstream>
 #include "Logger.h"
+#include <fstream>
+#include <vector>
 
 namespace SoftGL {
 
 class FileUtils {
- public:
+public:
   static bool exists(const std::string &path) {
     std::ifstream file(path);
     return file.good();
@@ -35,7 +36,7 @@ class FileUtils {
     ret.resize(size);
 
     file.seekg(0, std::ios::beg);
-    file.read(reinterpret_cast<char *>(ret.data()), (std::streamsize) size);
+    file.read(reinterpret_cast<char *>(ret.data()), (std::streamsize)size);
 
     return ret;
   }
@@ -46,10 +47,11 @@ class FileUtils {
       return "";
     }
 
-    return {(char *) data.data(), data.size()};
+    return {(char *)data.data(), data.size()};
   }
 
-  static bool writeBytes(const std::string &path, const char *data, size_t length) {
+  static bool writeBytes(const std::string &path, const char *data,
+                         size_t length) {
     std::ofstream file(path, std::ios::out | std::ios::binary);
     if (!file.is_open()) {
       LOGE("failed to open file: %s", path.c_str());
@@ -74,4 +76,4 @@ class FileUtils {
   }
 };
 
-}
+} // namespace SoftGL

@@ -25,9 +25,6 @@ endif (CCACHE)
 include_directories(
         "${THIRD_PARTY_DIR}/glfw/include"
         "${THIRD_PARTY_DIR}/glad/include"
-        "${THIRD_PARTY_DIR}/glm"
-        "${THIRD_PARTY_DIR}/assimp/include"
-        "${THIRD_PARTY_DIR}/assimp/contrib"
         "${THIRD_PARTY_DIR}/imgui"
         "${THIRD_PARTY_DIR}/json11"
         "${THIRD_PARTY_DIR}/md5"
@@ -39,20 +36,8 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 
-# assimp
-set(BUILD_SHARED_LIBS OFF)
-set(ASSIMP_NO_EXPORT ON)
-set(ASSIMP_BUILD_TESTS OFF)
-set(ASSIMP_INSTALL OFF)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-set(ASSIMP_BUILD_ZLIB ON)
-
-set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT FALSE)
-set(ASSIMP_BUILD_OBJ_IMPORTER TRUE)
-set(ASSIMP_BUILD_GLTF_IMPORTER TRUE)
-
-add_subdirectory(${THIRD_PARTY_DIR}/assimp)
-
+find_package(assimp CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 # glslang
 set(SKIP_GLSLANG_INSTALL ON)
@@ -91,7 +76,7 @@ add_executable(${TARGET_NAME}
         )
 
 set(LINK_LIBS
-        assimp
+        assimp::assimp
         glslang
         glslang-default-resource-limits
         SPIRV
@@ -134,11 +119,11 @@ if (UNIX AND NOT APPLE)
             )
 endif ()
 
-if (MSVC)
-    target_compile_options(${TARGET_NAME} PRIVATE $<$<BOOL:${MSVC}>:/arch:AVX2 /std:c++11>)
-else ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -O3")
-endif ()
+# if (MSVC)
+#     target_compile_options(${TARGET_NAME} PRIVATE $<$<BOOL:${MSVC}>:/arch:AVX2 /std:c++11>)
+# else ()
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -O3")
+# endif ()
 
 target_link_libraries(${TARGET_NAME} ${LINK_LIBS})
 
