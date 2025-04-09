@@ -163,7 +163,7 @@ public:
 
         // allocate descriptor sets
         descriptorSets_.resize(descriptorSetLayouts_.size());
-        for (size_t i = 0; i < descriptorSetLayouts_.size(); i++)
+        for (std::size_t i = 0; i < descriptorSetLayouts_.size(); i++)
         {
             descriptorSets_[i] = getNewDescriptorSet(descriptorSetLayouts_[i]);
         }
@@ -181,7 +181,7 @@ public:
 
         // descriptorSets_ -> vkDescriptorSets_
         vkDescriptorSets_.resize(descriptorSets_.size());
-        for (size_t i = 0; i < descriptorSets_.size(); i++)
+        for (std::size_t i = 0; i < descriptorSets_.size(); i++)
         {
             vkDescriptorSets_[i] = descriptorSets_[i]->set;
         }
@@ -337,7 +337,8 @@ private:
         fragShaderStageInfo.pName = "main";
     }
 
-    void createShaderModule(VkShaderModule &shaderModule, const uint32_t *spvCode, size_t codeSize)
+    void createShaderModule(VkShaderModule &shaderModule, const uint32_t *spvCode,
+                            std::size_t codeSize)
     {
         VkShaderModuleCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -369,7 +370,7 @@ private:
 
     // descriptor set pool
     std::unordered_map<VkDescriptorSetLayout, std::vector<DescriptorSet>> descriptorSetPool_;
-    size_t maxDescriptorSetPoolSize_ = 0;
+    std::size_t maxDescriptorSetPoolSize_ = 0;
 
     CommandBuffer *currCmdBuffer_ = nullptr;
 };

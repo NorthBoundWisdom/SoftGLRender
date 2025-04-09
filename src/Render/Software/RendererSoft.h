@@ -87,10 +87,10 @@ private:
                           std::vector<PrimitiveHolder> &appendPrimitives);
 
     void interpolateVertex(VertexHolder &out, VertexHolder &v0, VertexHolder &v1, float t);
-    void interpolateLinear(float *varsOut, const float *varsIn[2], size_t elemCnt, float t);
-    void interpolateBarycentric(float *varsOut, const float *varsIn[3], size_t elemCnt,
+    void interpolateLinear(float *varsOut, const float *varsIn[2], std::size_t elemCnt, float t);
+    void interpolateBarycentric(float *varsOut, const float *varsIn[3], std::size_t elemCnt,
                                 glm::aligned_vec4 &bc);
-    void interpolateBarycentricSIMD(float *varsOut, const float *varsIn[3], size_t elemCnt,
+    void interpolateBarycentricSIMD(float *varsOut, const float *varsIn[3], std::size_t elemCnt,
                                     glm::aligned_vec4 &bc);
 
     void rasterizationPoint(VertexHolder *v, float pointSize);
@@ -111,7 +111,8 @@ private:
     inline float *getFrameDepth(int x, int y, int sample);
     inline void setFrameColor(int x, int y, const RGBA &color, int sample);
 
-    size_t clippingNewVertex(size_t idx0, size_t idx1, float t, bool postVertexProcess = false);
+    std::size_t clippingNewVertex(std::size_t idx0, std::size_t idx1, float t,
+                                  bool postVertexProcess = false);
     void vertexShaderImpl(VertexHolder &vertex);
     void perspectiveDivideImpl(VertexHolder &vertex);
     void viewportTransformImpl(VertexHolder &vertex);
@@ -136,9 +137,9 @@ private:
     std::vector<PrimitiveHolder> primitives_;
 
     std::shared_ptr<float> varyings_ = nullptr;
-    size_t varyingsCnt_ = 0;
-    size_t varyingsAlignedCnt_ = 0;
-    size_t varyingsAlignedSize_ = 0;
+    std::size_t varyingsCnt_ = 0;
+    std::size_t varyingsAlignedCnt_ = 0;
+    std::size_t varyingsAlignedSize_ = 0;
 
     float pointSize_ = 1.f;
     bool earlyZ_ = true;

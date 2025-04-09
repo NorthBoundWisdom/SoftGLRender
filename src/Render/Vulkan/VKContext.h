@@ -180,8 +180,8 @@ private:
     // uniform buffer pool
     std::unordered_map<VkDeviceSize, std::vector<UniformBuffer>> uniformBufferPool_;
 
-    size_t maxCommandBufferPoolSize_ = 0;
-    size_t maxUniformBufferPoolSize_ = 0;
+    std::size_t maxCommandBufferPoolSize_ = 0;
+    std::size_t maxUniformBufferPoolSize_ = 0;
 
     std::unordered_map<std::string, VkExtensionProperties> instanceExtensions_;
     std::unordered_map<std::string, VkExtensionProperties> deviceExtensions_;

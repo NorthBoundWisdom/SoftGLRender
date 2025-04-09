@@ -66,7 +66,7 @@ public:
         }
     }
 
-    void updateVertexData(void *data, size_t length) override
+    void updateVertexData(void *data, std::size_t length) override
     {
         GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo_));
         GL_CHECK(glBufferData(GL_ARRAY_BUFFER, length, data, GL_STATIC_DRAW));
@@ -85,7 +85,7 @@ public:
         }
     }
 
-    inline size_t getIndicesCnt() const
+    inline std::size_t getIndicesCnt() const
     {
         return indicesCnt_;
     }
@@ -94,7 +94,7 @@ private:
     GLuint vao_ = 0;
     GLuint vbo_ = 0;
     GLuint ebo_ = 0;
-    size_t indicesCnt_ = 0;
+    std::size_t indicesCnt_ = 0;
 };
 
 } // namespace SoftGL

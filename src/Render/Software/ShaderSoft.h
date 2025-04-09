@@ -65,8 +65,8 @@ public:
     virtual void bindShaderUniforms(void *ptr) = 0;
     virtual void bindShaderVaryings(void *ptr) = 0;
 
-    virtual size_t getShaderUniformsSize() = 0;
-    virtual size_t getShaderVaryingsSize() = 0;
+    virtual std::size_t getShaderUniformsSize() = 0;
+    virtual std::size_t getShaderVaryingsSize() = 0;
 
     virtual std::vector<std::string> &getDefines() = 0;
     virtual std::vector<UniformDesc> &getUniformsDesc() = 0;
@@ -132,7 +132,7 @@ public:
     float getSampler2DLod(BaseSampler<RGBA> *sampler) const
     {
         auto &dfCtx = gl->dfCtx;
-        size_t dfOffset = getSamplerDerivativeOffset(sampler);
+        std::size_t dfOffset = getSamplerDerivativeOffset(sampler);
 
         auto *coord0 = (glm::vec2 *)(dfCtx.p0 + dfOffset);
         auto *coord1 = (glm::vec2 *)(dfCtx.p1 + dfOffset);
@@ -153,7 +153,7 @@ public:
         texLodFunc = std::bind(&ShaderSoft::getSampler2DLod, this, std::placeholders::_1);
     }
 
-    virtual size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const
+    virtual std::size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const
     {
         return 0;
     }
@@ -217,12 +217,12 @@ public:
         v = static_cast<ShaderVaryings *>(ptr);                                                    \
     }                                                                                              \
                                                                                                    \
-    size_t getShaderUniformsSize() override                                                        \
+    std::size_t getShaderUniformsSize() override                                                   \
     {                                                                                              \
         return sizeof(ShaderUniforms);                                                             \
     }                                                                                              \
                                                                                                    \
-    size_t getShaderVaryingsSize() override                                                        \
+    std::size_t getShaderVaryingsSize() override                                                   \
     {                                                                                              \
         return sizeof(ShaderVaryings);                                                             \
     }

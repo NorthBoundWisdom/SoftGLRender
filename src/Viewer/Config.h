@@ -34,7 +34,7 @@ public:
     std::string skyboxName;
     std::string skyboxPath;
 
-    size_t triangleCount_ = 0;
+    std::size_t triangleCount_ = 0;
 
     bool wireframe = false;
     bool worldAxis = true;

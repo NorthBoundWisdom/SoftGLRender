@@ -259,7 +259,7 @@ bool ModelLoader::processNode(const aiNode *ai_node, const aiScene *ai_scene, Mo
     outNode.transform = convertMatrix(ai_node->mTransformation);
     auto currTransform = transform * outNode.transform;
 
-    for (size_t i = 0; i < ai_node->mNumMeshes; i++)
+    for (std::size_t i = 0; i < ai_node->mNumMeshes; i++)
     {
         const aiMesh *meshPtr = ai_scene->mMeshes[ai_node->mMeshes[i]];
         if (meshPtr)
@@ -280,7 +280,7 @@ bool ModelLoader::processNode(const aiNode *ai_node, const aiScene *ai_scene, Mo
         }
     }
 
-    for (size_t i = 0; i < ai_node->mNumChildren; i++)
+    for (std::size_t i = 0; i < ai_node->mNumChildren; i++)
     {
         ModelNode childNode;
         if (processNode(ai_node->mChildren[i], ai_scene, childNode, currTransform))
@@ -296,7 +296,7 @@ bool ModelLoader::processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, Mo
     std::vector<Vertex> vertexes;
     std::vector<int> indices;
 
-    for (size_t i = 0; i < ai_mesh->mNumVertices; i++)
+    for (std::size_t i = 0; i < ai_mesh->mNumVertices; i++)
     {
         Vertex vertex{};
         if (ai_mesh->HasPositions())
@@ -328,7 +328,7 @@ bool ModelLoader::processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, Mo
         }
         vertexes.push_back(vertex);
     }
-    for (size_t i = 0; i < ai_mesh->mNumFaces; i++)
+    for (std::size_t i = 0; i < ai_mesh->mNumFaces; i++)
     {
         aiFace face = ai_mesh->mFaces[i];
         if (face.mNumIndices != 3)
@@ -336,7 +336,7 @@ bool ModelLoader::processMesh(const aiMesh *ai_mesh, const aiScene *ai_scene, Mo
             LOGE("ModelLoader::processMesh, mesh not transformed to triangle mesh.");
             return false;
         }
-        for (size_t j = 0; j < face.mNumIndices; ++j)
+        for (std::size_t j = 0; j < face.mNumIndices; ++j)
         {
             indices.push_back((int)(face.mIndices[j]));
         }
@@ -402,7 +402,7 @@ void ModelLoader::processMaterial(const aiMaterial *ai_material, aiTextureType t
     {
         return;
     }
-    for (size_t i = 0; i < ai_material->GetTextureCount(textureType); i++)
+    for (std::size_t i = 0; i < ai_material->GetTextureCount(textureType); i++)
     {
         aiTextureMapMode texMapMode[2]; // [u, v]
         aiString texPath;
@@ -503,8 +503,8 @@ void ModelLoader::preloadTextureFiles(const aiScene *scene, const std::string &r
         for (int texType = aiTextureType_NONE; texType <= AI_TEXTURE_TYPE_MAX; texType++)
         {
             auto textureType = static_cast<aiTextureType>(texType);
-            size_t texCnt = material->GetTextureCount(textureType);
-            for (size_t i = 0; i < texCnt; i++)
+            std::size_t texCnt = material->GetTextureCount(textureType);
+            for (std::size_t i = 0; i < texCnt; i++)
             {
                 aiString textPath;
                 aiReturn retStatus = material->GetTexture(textureType, i, &textPath);
@@ -521,7 +521,7 @@ void ModelLoader::preloadTextureFiles(const aiScene *scene, const std::string &r
         return;
     }
 
-    ThreadPool pool(std::min(texPaths.size(), (size_t)std::thread::hardware_concurrency()));
+    ThreadPool pool(std::min(texPaths.size(), (std::size_t)std::thread::hardware_concurrency()));
     for (auto &path : texPaths)
     {
         pool.pushTask([&](int thread_id) { loadTextureFile(path); });

@@ -68,7 +68,7 @@ public:
         vertexShader_->bindShaderAttributes(ptr);
     }
 
-    inline void bindUniformBlockBuffer(void *data, size_t len, int binding)
+    inline void bindUniformBlockBuffer(void *data, std::size_t len, int binding)
     {
         int offset = vertexShader_->GetUniformOffset(binding);
         memcpy(uniformBuffer_.get() + offset, data, len);
@@ -91,7 +91,7 @@ public:
         fragmentShader_->bindShaderVaryings(ptr);
     }
 
-    inline size_t getShaderVaryingsSize()
+    inline std::size_t getShaderVaryingsSize()
     {
         return vertexShader_->getShaderVaryingsSize();
     }

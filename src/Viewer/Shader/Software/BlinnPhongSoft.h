@@ -141,7 +141,7 @@ public:
     const float depthBiasCoeff = 0.00025f;
     const float depthBiasMin = 0.00005f;
 
-    size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override
+    std::size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override
     {
         return offsetof(ShaderVaryings, v_texCoord);
     }

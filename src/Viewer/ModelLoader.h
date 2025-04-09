@@ -33,7 +33,7 @@ public:
         return scene_;
     }
 
-    inline size_t getModelPrimitiveCnt() const
+    inline std::size_t getModelPrimitiveCnt() const
     {
         if (scene_.model)
         {

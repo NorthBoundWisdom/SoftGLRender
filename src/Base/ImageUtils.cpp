@@ -25,15 +25,15 @@ std::shared_ptr<Buffer<RGBA>> ImageUtils::readImageRGBA(const std::string &path)
         LOGD("ImageUtils::readImage failed, path: %s", path.c_str());
         return nullptr;
     }
-    auto buffer = Buffer<RGBA>::makeDefault(iw, ih);
+    auto buffer = Buffer<RGBA>::makeLayout(iw, ih, BufferLayout::Layout_Linear);
 
     // convert to rgba
-    for (size_t y = 0; y < ih; y++)
+    for (std::size_t y = 0; y < ih; y++)
     {
-        for (size_t x = 0; x < iw; x++)
+        for (std::size_t x = 0; x < iw; x++)
         {
             auto &to = *buffer->get(x, y);
-            size_t idx = x + y * iw;
+            std::size_t idx = x + y * iw;
 
             switch (n)
             {

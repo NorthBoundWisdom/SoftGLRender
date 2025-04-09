@@ -108,8 +108,8 @@ struct UniformsIBLPrefilter
 struct TextureData
 {
     std::string tag;
-    size_t width = 0;
-    size_t height = 0;
+    std::size_t width = 0;
+    std::size_t height = 0;
     std::vector<std::shared_ptr<Buffer<RGBA>>> data;
     WrapMode wrapModeU = Wrap_REPEAT;
     WrapMode wrapModeV = Wrap_REPEAT;

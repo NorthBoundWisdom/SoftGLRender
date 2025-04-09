@@ -244,7 +244,7 @@ void RendererSoft::processPrimitiveAssembly()
 
 void RendererSoft::processClipping()
 {
-    size_t primitiveCnt = primitives_.size();
+    std::size_t primitiveCnt = primitives_.size();
     for (int i = 0; i < primitiveCnt; i++)
     {
         auto &primitive = primitives_[i];
@@ -592,8 +592,8 @@ void RendererSoft::clippingTriangle(PrimitiveHolder &triangle,
     }
 
     bool fullClip = false;
-    std::vector<size_t> indicesIn;
-    std::vector<size_t> indicesOut;
+    std::vector<std::size_t> indicesIn;
+    std::vector<std::size_t> indicesOut;
 
     indicesIn.push_back(v0->index);
     indicesIn.push_back(v1->index);
@@ -609,13 +609,13 @@ void RendererSoft::clippingTriangle(PrimitiveHolder &triangle,
                 break;
             }
             indicesOut.clear();
-            size_t idxPre = indicesIn[0];
+            std::size_t idxPre = indicesIn[0];
             float dPre = glm::dot(FrustumClipPlane[planeIdx], vertexes_[idxPre].clipPos);
 
             indicesIn.push_back(idxPre);
             for (int i = 1; i < indicesIn.size(); i++)
             {
-                size_t idx = indicesIn[i];
+                std::size_t idx = indicesIn[i];
                 float d = glm::dot(FrustumClipPlane[planeIdx], vertexes_[idx].clipPos);
 
                 if (dPre >= 0)
@@ -679,7 +679,7 @@ void RendererSoft::rasterizationPolygonsPoint(std::vector<PrimitiveHolder> &prim
         {
             continue;
         }
-        for (size_t idx : triangle.indices)
+        for (std::size_t idx : triangle.indices)
         {
             PrimitiveHolder point;
             point.discard = false;
@@ -707,7 +707,7 @@ void RendererSoft::rasterizationPolygonsLine(std::vector<PrimitiveHolder> &primi
         {
             continue;
         }
-        for (size_t i = 0; i < 3; i++)
+        for (std::size_t i = 0; i < 3; i++)
         {
             PrimitiveHolder line;
             line.discard = false;
@@ -1041,13 +1041,14 @@ void RendererSoft::multiSampleResolve()
 {
     if (!fboColor_->buffer)
     {
-        fboColor_->buffer = Buffer<RGBA>::makeDefault(fboColor_->width, fboColor_->height);
+        fboColor_->buffer = Buffer<RGBA>::makeLayout(fboColor_->width, fboColor_->height,
+                                                     BufferLayout::Layout_Linear);
     }
 
     auto *srcPtr = fboColor_->bufferMs4x->getRawDataPtr();
     auto *dstPtr = fboColor_->buffer->getRawDataPtr();
 
-    for (size_t row = 0; row < fboColor_->height; row++)
+    for (std::size_t row = 0; row < fboColor_->height; row++)
     {
         auto *rowSrc = srcPtr + row * fboColor_->width;
         auto *rowDst = dstPtr + row * fboColor_->width;
@@ -1058,7 +1059,7 @@ void RendererSoft::multiSampleResolve()
 #endif
                 auto *src = rowSrc;
                 auto *dst = rowDst;
-                for (size_t idx = 0; idx < fboColor_->width; idx++)
+                for (std::size_t idx = 0; idx < fboColor_->width; idx++)
                 {
                     glm::vec4 color(0.f);
                     for (int i = 0; i < fboColor_->sampleCnt; i++)
@@ -1134,7 +1135,8 @@ void RendererSoft::setFrameColor(int x, int y, const RGBA &color, int sample)
     }
 }
 
-size_t RendererSoft::clippingNewVertex(size_t idx0, size_t idx1, float t, bool postVertexProcess)
+std::size_t RendererSoft::clippingNewVertex(std::size_t idx0, std::size_t idx1, float t,
+                                            bool postVertexProcess)
 {
     vertexes_.emplace_back();
     VertexHolder &vh = vertexes_.back();
@@ -1268,7 +1270,7 @@ void RendererSoft::interpolateVertex(VertexHolder &out, VertexHolder &v0, Vertex
     vertexShaderImpl(out);
 }
 
-void RendererSoft::interpolateLinear(float *varsOut, const float *varsIn[2], size_t elemCnt,
+void RendererSoft::interpolateLinear(float *varsOut, const float *varsIn[2], std::size_t elemCnt,
                                      float t)
 {
     const float *inVar0 = varsIn[0];
@@ -1285,8 +1287,8 @@ void RendererSoft::interpolateLinear(float *varsOut, const float *varsIn[2], siz
     }
 }
 
-void RendererSoft::interpolateBarycentric(float *varsOut, const float *varsIn[3], size_t elemCnt,
-                                          glm::aligned_vec4 &bc)
+void RendererSoft::interpolateBarycentric(float *varsOut, const float *varsIn[3],
+                                          std::size_t elemCnt, glm::aligned_vec4 &bc)
 {
     const float *inVar0 = varsIn[0];
     const float *inVar1 = varsIn[1];
@@ -1320,7 +1322,7 @@ void RendererSoft::interpolateBarycentric(float *varsOut, const float *varsIn[3]
 }
 
 void RendererSoft::interpolateBarycentricSIMD(float *varsOut, const float *varsIn[3],
-                                              size_t elemCnt, glm::aligned_vec4 &bc)
+                                              std::size_t elemCnt, glm::aligned_vec4 &bc)
 {
 #ifdef SOFTGL_SIMD_OPT
     const float *inVar0 = varsIn[0];

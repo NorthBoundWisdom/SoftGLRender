@@ -17,15 +17,16 @@ class HashUtils
 {
 public:
     template <class T>
-    inline static void hashCombine(size_t &seed, T const &v)
+    inline static void hashCombine(std::size_t &seed, T const &v)
     {
         seed ^= std::hash<T>()(v) + 0x9e3779b9u + (seed << 6u) + (seed >> 2u);
     }
 
-    inline static uint32_t murmur3(const uint32_t *key, size_t wordCount, uint32_t seed) noexcept
+    inline static uint32_t murmur3(const uint32_t *key, std::size_t wordCount,
+                                   uint32_t seed) noexcept
     {
         uint32_t h = seed;
-        size_t i = wordCount;
+        std::size_t i = wordCount;
         do
         {
             uint32_t k = *key++;
@@ -46,14 +47,14 @@ public:
     }
 
     template <typename T>
-    inline static void hashCombineMurmur(size_t &seed, const T &key)
+    inline static void hashCombineMurmur(std::size_t &seed, const T &key)
     {
         static_assert(0 == (sizeof(key) & 3u), "Hashing requires a size that is a multiple of 4.");
         uint32_t keyHash = HashUtils::murmur3((const uint32_t *)&key, sizeof(key) / 4, 0);
         seed ^= keyHash + 0x9e3779b9u + (seed << 6u) + (seed >> 2u);
     }
 
-    inline static std::string getHashMD5(const char *data, size_t length)
+    inline static std::string getHashMD5(const char *data, std::size_t length)
     {
         unsigned char digest[17] = {0};
 

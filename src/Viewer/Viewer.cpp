@@ -656,7 +656,7 @@ void Viewer::setupSamplerUniforms(Material &material)
 
 bool Viewer::setupShaderProgram(Material &material, ShadingModel shading)
 {
-    size_t cacheKey = getShaderProgramCacheKey(shading, material.shaderDefines);
+    std::size_t cacheKey = getShaderProgramCacheKey(shading, material.shaderDefines);
 
     // try cache
     auto cachedProgram = programCache_.find(cacheKey);
@@ -709,7 +709,7 @@ void Viewer::setupPipelineStates(ModelBase &model,
         extraStates(rs);
     }
 
-    size_t cacheKey = getPipelineCacheKey(material, rs);
+    std::size_t cacheKey = getPipelineCacheKey(material, rs);
     auto it = pipelineCache_.find(cacheKey);
     if (it != pipelineCache_.end())
     {
@@ -1052,9 +1052,10 @@ std::set<std::string> Viewer::generateShaderDefines(Material &material)
     return shaderDefines;
 }
 
-size_t Viewer::getShaderProgramCacheKey(ShadingModel shading, const std::set<std::string> &defines)
+std::size_t Viewer::getShaderProgramCacheKey(ShadingModel shading,
+                                             const std::set<std::string> &defines)
 {
-    size_t seed = 0;
+    std::size_t seed = 0;
     HashUtils::hashCombine(seed, (int)shading);
     for (auto &def : defines)
     {
@@ -1063,9 +1064,9 @@ size_t Viewer::getShaderProgramCacheKey(ShadingModel shading, const std::set<std
     return seed;
 }
 
-size_t Viewer::getPipelineCacheKey(Material &material, const RenderStates &rs)
+std::size_t Viewer::getPipelineCacheKey(Material &material, const RenderStates &rs)
 {
-    size_t seed = 0;
+    std::size_t seed = 0;
 
     HashUtils::hashCombine(seed, (int)material.materialObj->shadingModel);
 

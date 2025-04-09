@@ -20,7 +20,7 @@ namespace SoftGL
 class ThreadPool
 {
 public:
-    explicit ThreadPool(const size_t threadCnt = std::thread::hardware_concurrency())
+    explicit ThreadPool(const std::size_t threadCnt = std::thread::hardware_concurrency())
         : threadCnt_(threadCnt)
         , threads_(new std::thread[threadCnt])
     {
@@ -34,7 +34,7 @@ public:
         joinThreads();
     }
 
-    inline size_t getThreadCnt() const
+    inline std::size_t getThreadCnt() const
     {
         return threadCnt_;
     }
@@ -45,7 +45,7 @@ public:
         tasksCnt_++;
         {
             const std::lock_guard<std::mutex> lock(mutex_);
-            tasks_.push(std::function<void(size_t)>(task));
+            tasks_.push(std::function<void(std::size_t)>(task));
         }
     }
 
@@ -78,7 +78,7 @@ public:
 private:
     void createThreads()
     {
-        for (size_t i = 0; i < threadCnt_; i++)
+        for (std::size_t i = 0; i < threadCnt_; i++)
         {
             threads_[i] = std::thread(&ThreadPool::taskWorker, this, i);
         }
@@ -86,24 +86,24 @@ private:
 
     void joinThreads()
     {
-        for (size_t i = 0; i < threadCnt_; i++)
+        for (std::size_t i = 0; i < threadCnt_; i++)
         {
             threads_[i].join();
         }
     }
 
-    size_t tasksQueuedCnt() const
+    std::size_t tasksQueuedCnt() const
     {
         const std::lock_guard<std::mutex> lock(mutex_);
         return tasks_.size();
     }
 
-    size_t tasksRunningCnt() const
+    std::size_t tasksRunningCnt() const
     {
         return tasksCnt_ - tasksQueuedCnt();
     }
 
-    bool popTask(std::function<void(size_t)> &task)
+    bool popTask(std::function<void(std::size_t)> &task)
     {
         const std::lock_guard<std::mutex> lock(mutex_);
         if (tasks_.empty())
@@ -116,11 +116,11 @@ private:
         }
     }
 
-    void taskWorker(size_t threadId)
+    void taskWorker(std::size_t threadId)
     {
         while (running_)
         {
-            std::function<void(size_t)> task;
+            std::function<void(std::size_t)> task;
             if (!paused && popTask(task))
             {
                 task(threadId);
@@ -138,10 +138,10 @@ private:
     std::atomic<bool> running_{true};
 
     std::unique_ptr<std::thread[]> threads_;
-    std::atomic<size_t> threadCnt_{0};
+    std::atomic<std::size_t> threadCnt_{0};
 
-    std::queue<std::function<void(size_t)>> tasks_ = {};
-    std::atomic<size_t> tasksCnt_{0};
+    std::queue<std::function<void(std::size_t)>> tasks_ = {};
+    std::atomic<std::size_t> tasksCnt_{0};
 };
 
 } // namespace SoftGL

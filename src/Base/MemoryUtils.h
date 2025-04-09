@@ -19,7 +19,7 @@ namespace SoftGL
 class MemoryUtils
 {
 public:
-    static void *alignedMalloc(size_t size, size_t alignment = SOFTGL_ALIGNMENT)
+    static void *alignedMalloc(std::size_t size, std::size_t alignment = SOFTGL_ALIGNMENT)
     {
         if ((alignment & (alignment - 1)) != 0)
         {
@@ -27,14 +27,14 @@ public:
             return nullptr;
         }
 
-        size_t extra = alignment + sizeof(void *);
+        std::size_t extra = alignment + sizeof(void *);
         void *data = malloc(size + extra);
         if (!data)
         {
             LOGE("failed to malloc with size: %d", size);
             return nullptr;
         }
-        size_t addr = (size_t)data + extra;
+        std::size_t addr = (std::size_t)data + extra;
         void *alignedPtr = (void *)(addr - (addr % alignment));
         *((void **)alignedPtr - 1) = data;
         return alignedPtr;
@@ -48,7 +48,7 @@ public:
         }
     }
 
-    static size_t alignedSize(size_t size)
+    static std::size_t alignedSize(std::size_t size)
     {
         if (size == 0)
         {
@@ -58,7 +58,7 @@ public:
     }
 
     template <typename T>
-    static std::shared_ptr<T> makeAlignedBuffer(size_t elemCnt)
+    static std::shared_ptr<T> makeAlignedBuffer(std::size_t elemCnt)
     {
         if (elemCnt == 0)
         {
@@ -69,7 +69,7 @@ public:
     }
 
     template <typename T>
-    static std::shared_ptr<T> makeBuffer(size_t elemCnt, const uint8_t *data = nullptr)
+    static std::shared_ptr<T> makeBuffer(std::size_t elemCnt, const uint8_t *data = nullptr)
     {
         if (elemCnt == 0)
         {

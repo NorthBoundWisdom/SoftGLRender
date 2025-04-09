@@ -1,39 +1,35 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.24)
+
 project(SoftGLRender)
 
-set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-set(CMAKE_CXX_STANDARD 11)
-
+set(CMAKE_CXX_STANDARD 20)
 set(TARGET_NAME SoftGLRender)
-set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 
 # enable SIMD
 add_definitions("-DSOFTGL_SIMD_OPT")
 
-# debug
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_definitions("-DDEBUG")
-endif ()
+# add defines for build
+if(MSVC)
+    add_definitions(-DMSVC_COMPILER)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_definitions(-DCLANG_COMPILER)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_definitions(-DGCC_COMPILER)
+endif()
 
-find_program(CCACHE "ccache")
-if (CCACHE)
-    message(STATUS "find ccache")
-    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE})
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
-endif (CCACHE)
-
+set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 include_directories(
-        "${THIRD_PARTY_DIR}/glfw/include"
-        "${THIRD_PARTY_DIR}/glad/include"
-        "${THIRD_PARTY_DIR}/imgui"
-        "${THIRD_PARTY_DIR}/json11"
-        "${THIRD_PARTY_DIR}/md5"
-        "${THIRD_PARTY_DIR}/stb/include"
-        "${THIRD_PARTY_DIR}/vulkan/include"
-        "${THIRD_PARTY_DIR}/glslang"
-        "${THIRD_PARTY_DIR}/vma"
-        "${THIRD_PARTY_DIR}/renderdoc"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${THIRD_PARTY_DIR}/glfw/include"
+    "${THIRD_PARTY_DIR}/glad/include"
+    "${THIRD_PARTY_DIR}/imgui"
+    "${THIRD_PARTY_DIR}/json11"
+    "${THIRD_PARTY_DIR}/md5"
+    "${THIRD_PARTY_DIR}/stb/include"
+    "${THIRD_PARTY_DIR}/vulkan/include"
+    "${THIRD_PARTY_DIR}/glslang"
+    "${THIRD_PARTY_DIR}/vma"
+    "${THIRD_PARTY_DIR}/renderdoc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 
 find_package(assimp CONFIG REQUIRED)
@@ -127,20 +123,17 @@ endif ()
 
 target_link_libraries(${TARGET_NAME} ${LINK_LIBS})
 
-# output dir
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-
 # copy assets
 add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/assets $<TARGET_FILE_DIR:${TARGET_NAME}>/assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets $<TARGET_FILE_DIR:${TARGET_NAME}>/assets
 
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/Viewer/Shader/GLSL $<TARGET_FILE_DIR:${TARGET_NAME}>/shaders/GLSL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Viewer/Shader/GLSL $<TARGET_FILE_DIR:${TARGET_NAME}>/shaders/GLSL
 
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/cache $<TARGET_FILE_DIR:${TARGET_NAME}>/cache
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/cache $<TARGET_FILE_DIR:${TARGET_NAME}>/cache
 
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${THIRD_PARTY_DIR}/renderdoc/renderdoc.dll $<TARGET_FILE_DIR:${TARGET_NAME}>/renderdoc.dll
-        )
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${THIRD_PARTY_DIR}/renderdoc/renderdoc.dll $<TARGET_FILE_DIR:${TARGET_NAME}>/renderdoc.dll
+    )

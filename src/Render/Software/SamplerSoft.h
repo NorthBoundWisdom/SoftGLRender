@@ -21,11 +21,11 @@ class BaseSampler
 {
 public:
     virtual bool empty() = 0;
-    inline size_t width() const
+    inline std::size_t width() const
     {
         return width_;
     }
-    inline size_t height() const
+    inline std::size_t height() const
     {
         return height_;
     }
@@ -65,8 +65,8 @@ public:
 protected:
     T borderColor_;
 
-    size_t width_ = 0;
-    size_t height_ = 0;
+    std::size_t width_ = 0;
+    std::size_t height_ = 0;
 
     bool useMipmaps = false;
     WrapMode wrapMode_ = Wrap_CLAMP_TO_EDGE;

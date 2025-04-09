@@ -33,11 +33,11 @@ public:
 
         if (samples == 1)
         {
-            buffer = Buffer<T>::makeDefault(w, h);
+            buffer = Buffer<T>::makeLayout(w, h, BufferLayout::Layout_Linear);
         }
         else if (samples == 4)
         {
-            bufferMs4x = Buffer<glm::tvec4<T>>::makeDefault(w, h);
+            bufferMs4x = Buffer<glm::tvec4<T>>::makeLayout(w, h, BufferLayout::Layout_Linear);
         }
         else
         {

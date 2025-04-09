@@ -46,7 +46,7 @@ public:
     void create(VkPipelineVertexInputStateCreateInfo &vertexInputInfo, ShaderProgramVulkan *program,
                 VkRenderPass &renderPass, VkSampleCountFlagBits sampleCount)
     {
-        size_t cacheKey = getPipelineCacheKey(program, renderPass, sampleCount);
+        std::size_t cacheKey = getPipelineCacheKey(program, renderPass, sampleCount);
         auto it = pipelineCache_.find(cacheKey);
         if (it != pipelineCache_.end())
         {
@@ -187,10 +187,10 @@ private:
         return ret;
     }
 
-    static size_t getPipelineCacheKey(ShaderProgramVulkan *program, VkRenderPass &renderPass,
-                                      VkSampleCountFlagBits sampleCount)
+    static std::size_t getPipelineCacheKey(ShaderProgramVulkan *program, VkRenderPass &renderPass,
+                                           VkSampleCountFlagBits sampleCount)
     {
-        size_t seed = 0;
+        std::size_t seed = 0;
 
         HashUtils::hashCombine(seed, (void *)program);
         HashUtils::hashCombine(seed, (void *)renderPass);
@@ -204,7 +204,7 @@ private:
     VkDevice device_ = VK_NULL_HANDLE;
 
     PipelineContainerVK currPipeline_{};
-    std::unordered_map<size_t, PipelineContainerVK> pipelineCache_;
+    std::unordered_map<std::size_t, PipelineContainerVK> pipelineCache_;
 };
 
 } // namespace SoftGL

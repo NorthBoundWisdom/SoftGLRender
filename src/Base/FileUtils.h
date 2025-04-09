@@ -3,8 +3,8 @@
  * @author 	: keith@robot9.me
  *
  */
-
-#pragma once
+#ifndef SOFTGL_FILE_UTILS_H
+#define SOFTGL_FILE_UTILS_H
 
 #include <fstream>
 #include <vector>
@@ -13,7 +13,6 @@
 
 namespace SoftGL
 {
-
 class FileUtils
 {
 public:
@@ -33,7 +32,7 @@ public:
             return ret;
         }
 
-        size_t size = file.tellg();
+        std::size_t size = file.tellg();
         if (size <= 0)
         {
             LOGE("failed to read file, invalid size: %d", size);
@@ -59,7 +58,7 @@ public:
         return {(char *)data.data(), data.size()};
     }
 
-    static bool writeBytes(const std::string &path, const char *data, size_t length)
+    static bool writeBytes(const std::string &path, const char *data, std::size_t length)
     {
         std::ofstream file(path, std::ios::out | std::ios::binary);
         if (!file.is_open())
@@ -87,5 +86,5 @@ public:
         return true;
     }
 };
-
 } // namespace SoftGL
+#endif // SOFTGL_FILE_UTILS_H

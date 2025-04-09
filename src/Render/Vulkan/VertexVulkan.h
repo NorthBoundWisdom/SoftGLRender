@@ -32,9 +32,9 @@ public:
         bindingDescription_.stride = vertexArr.vertexSize;
         bindingDescription_.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-        size_t attrCnt = vertexArr.vertexesDesc.size();
+        std::size_t attrCnt = vertexArr.vertexesDesc.size();
         attributeDescriptions_.resize(attrCnt);
-        for (size_t i = 0; i < attrCnt; i++)
+        for (std::size_t i = 0; i < attrCnt; i++)
         {
             auto &attrDesc = vertexArr.vertexesDesc[i];
             attributeDescriptions_[i].binding = 0;
@@ -78,14 +78,14 @@ public:
         return uuid_.get();
     }
 
-    void updateVertexData(void *data, size_t length) override
+    void updateVertexData(void *data, std::size_t length) override
     {
         uploadBufferData(vertexBuffer_, vertexStagingBuffer_, data, length,
                          VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
     }
 
     // only Float element
-    static VkFormat vertexAttributeFormat(size_t size)
+    static VkFormat vertexAttributeFormat(std::size_t size)
     {
         switch (size)
         {
@@ -122,7 +122,7 @@ private:
     void uploadBufferData(AllocatedBuffer &buffer, AllocatedBuffer &stagingBuffer, void *bufferData,
                           VkDeviceSize bufferSize, VkAccessFlags dstAccessMask)
     {
-        memcpy(stagingBuffer.allocInfo.pMappedData, bufferData, (size_t)bufferSize);
+        memcpy(stagingBuffer.allocInfo.pMappedData, bufferData, (std::size_t)bufferSize);
 
         auto *commandBuffer = vkCtx_.beginCommands();
 

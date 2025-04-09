@@ -30,7 +30,7 @@ struct Vertex
 struct ModelVertexes : VertexArray
 {
     PrimitiveType primitiveType;
-    size_t primitiveCnt = 0;
+    std::size_t primitiveCnt = 0;
     std::vector<Vertex> vertexes;
     std::vector<int32_t> indices;
 
@@ -103,9 +103,9 @@ struct Model
     ModelNode rootNode;
     BoundingBox rootAABB;
 
-    size_t meshCnt = 0;
-    size_t primitiveCnt = 0;
-    size_t vertexCnt = 0;
+    std::size_t meshCnt = 0;
+    std::size_t primitiveCnt = 0;
+    std::size_t vertexCnt = 0;
 
     glm::mat4 centeredTransform;
 

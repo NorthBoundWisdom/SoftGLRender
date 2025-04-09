@@ -29,7 +29,7 @@ public:
         memcpy(indices.data(), vertexArray.indexBuffer, vertexArray.indexBufferLength);
     }
 
-    void updateVertexData(void *data, size_t length) override
+    void updateVertexData(void *data, std::size_t length) override
     {
         memcpy(vertexes.data(), data, std::min(length, vertexes.size()));
     }
@@ -40,9 +40,9 @@ public:
     }
 
 public:
-    size_t vertexStride = 0;
-    size_t vertexCnt = 0;
-    size_t indicesCnt = 0;
+    std::size_t vertexStride = 0;
+    std::size_t vertexCnt = 0;
+    std::size_t indicesCnt = 0;
     std::vector<uint8_t> vertexes;
     std::vector<int32_t> indices;
 

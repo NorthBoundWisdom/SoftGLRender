@@ -100,9 +100,9 @@ private:
     void updateShadowTextures(MaterialObject *materialObj, bool shadowPass);
 
     static std::set<std::string> generateShaderDefines(Material &material);
-    static size_t getShaderProgramCacheKey(ShadingModel shading,
-                                           const std::set<std::string> &defines);
-    static size_t getPipelineCacheKey(Material &material, const RenderStates &rs);
+    static std::size_t getShaderProgramCacheKey(ShadingModel shading,
+                                                const std::set<std::string> &defines);
+    static std::size_t getPipelineCacheKey(Material &material, const RenderStates &rs);
 
     std::shared_ptr<Texture> createTextureCubeDefault(int width, int height, uint32_t usage,
                                                       bool mipmaps = false);
@@ -149,8 +149,8 @@ protected:
     std::shared_ptr<UniformBlock> uniformBlockMaterial_;
 
     // caches
-    std::unordered_map<size_t, std::shared_ptr<ShaderProgram>> programCache_;
-    std::unordered_map<size_t, std::shared_ptr<PipelineStates>> pipelineCache_;
+    std::unordered_map<std::size_t, std::shared_ptr<ShaderProgram>> programCache_;
+    std::unordered_map<std::size_t, std::shared_ptr<PipelineStates>> pipelineCache_;
 };
 
 } // namespace View

@@ -579,7 +579,7 @@ void TextureVulkan::setImageDataInternal(const std::vector<const void *> &buffer
     auto *dataPtr = (uint8_t *)uploadStagingBuffer_.allocInfo.pMappedData;
     for (auto &ptr : buffers)
     {
-        memcpy(dataPtr, ptr, static_cast<size_t>(imageSize));
+        memcpy(dataPtr, ptr, static_cast<std::size_t>(imageSize));
         dataPtr += imageSize;
     }
 

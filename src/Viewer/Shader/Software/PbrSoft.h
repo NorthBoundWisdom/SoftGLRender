@@ -140,7 +140,7 @@ class FS : public ShaderPbrIBL
 public:
     CREATE_SHADER_CLONE(FS)
 
-    size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override
+    std::size_t getSamplerDerivativeOffset(BaseSampler<RGBA> *sampler) const override
     {
         return offsetof(ShaderVaryings, v_texCoord);
     }

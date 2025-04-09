@@ -32,7 +32,7 @@ struct Viewport
 struct VertexHolder
 {
     bool discard = false;
-    size_t index = 0;
+    std::size_t index = 0;
 
     void *vertex = nullptr;
     float *varyings = nullptr;
@@ -49,7 +49,7 @@ struct PrimitiveHolder
 {
     bool discard = false;
     bool frontFacing = true;
-    size_t indices[3] = {0, 0, 0};
+    std::size_t indices[3] = {0, 0, 0};
 };
 
 class SampleContext
@@ -161,7 +161,7 @@ public:
 class PixelQuadContext
 {
 public:
-    void SetVaryingsSize(size_t size)
+    void SetVaryingsSize(std::size_t size)
     {
         if (varyingsAlignedCnt_ != size)
         {
@@ -213,7 +213,7 @@ public:
     std::shared_ptr<ShaderProgramSoft> shaderProgram = nullptr;
 
 private:
-    size_t varyingsAlignedCnt_ = 0;
+    std::size_t varyingsAlignedCnt_ = 0;
     std::shared_ptr<float> varyingsPool_ = nullptr;
 };
 
