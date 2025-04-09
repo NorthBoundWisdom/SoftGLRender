@@ -3,8 +3,8 @@
  * @author 	: keith@robot9.me
  *
  */
-
-#pragma once
+#ifndef IMAGE_UTILS_H
+#define IMAGE_UTILS_H
 
 #include <string>
 
@@ -13,7 +13,6 @@
 
 namespace SoftGL
 {
-
 class ImageUtils
 {
 public:
@@ -23,5 +22,6 @@ public:
 
     static void convertFloatImage(RGBA *dst, float *src, uint32_t width, uint32_t height);
 };
-
 } // namespace SoftGL
+
+#endif // IMAGE_UTILS_H

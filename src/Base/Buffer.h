@@ -22,6 +22,7 @@ template <typename T>
 class Buffer
 {
 public:
+    virtual ~Buffer() = default;
     static std::shared_ptr<Buffer<T>> makeLayout(std::size_t w, std::size_t h, BufferLayout layout);
 
     virtual void initLayout()

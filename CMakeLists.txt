@@ -23,11 +23,10 @@ include_directories(
     "${THIRD_PARTY_DIR}/glad/include"
     "${THIRD_PARTY_DIR}/imgui"
     "${THIRD_PARTY_DIR}/json11"
-    "${THIRD_PARTY_DIR}/md5"
-    "${THIRD_PARTY_DIR}/stb/include"
     "${THIRD_PARTY_DIR}/vulkan/include"
     "${THIRD_PARTY_DIR}/glslang"
     "${THIRD_PARTY_DIR}/vma"
+    ${THIRD_PARTY_DIR}
     "${THIRD_PARTY_DIR}/renderdoc"
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

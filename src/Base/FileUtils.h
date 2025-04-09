@@ -7,6 +7,7 @@
 #define SOFTGL_FILE_UTILS_H
 
 #include <fstream>
+#include <ios>
 #include <vector>
 
 #include "Logger.h"
@@ -32,18 +33,18 @@ public:
             return ret;
         }
 
-        std::size_t size = file.tellg();
+        std::streamoff size = file.tellg();
         if (size <= 0)
         {
             LOGE("failed to read file, invalid size: %d", size);
             return ret;
         }
 
-        ret.resize(size);
+        ret.resize(static_cast<std::size_t>(size));
 
         file.seekg(0, std::ios::beg);
         file.read(reinterpret_cast<char *>(ret.data()), (std::streamsize)size);
-
+        file.close();
         return ret;
     }
 
@@ -58,7 +59,7 @@ public:
         return {(char *)data.data(), data.size()};
     }
 
-    static bool writeBytes(const std::string &path, const char *data, std::size_t length)
+    static bool writeBytes(const std::string &path, const char *data, std::streamsize length)
     {
         std::ofstream file(path, std::ios::out | std::ios::binary);
         if (!file.is_open())
@@ -68,6 +69,7 @@ public:
         }
 
         file.write(data, length);
+        file.close();
         return true;
     }
 
@@ -80,7 +82,7 @@ public:
             return false;
         }
 
-        file.write(str.c_str(), str.length());
+        file.write(str.c_str(), static_cast<std::streamsize>(str.length()));
         file.close();
 
         return true;

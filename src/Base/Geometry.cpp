@@ -8,10 +8,12 @@
 
 #include <algorithm>
 
+#include "Base/AuxMath.h"
+
 namespace SoftGL
 {
 
-void BoundingBox::getCorners(glm::vec3 *dst) const
+void BoundingBox::getCorners(std::array<glm::vec3, 8> &dst) const
 {
     dst[0] = glm::vec3(min.x, max.y, max.z);
     dst[1] = glm::vec3(min.x, min.y, max.z);
@@ -59,13 +61,13 @@ void BoundingBox::updateMinMax(glm::vec3 *point, glm::vec3 *min, glm::vec3 *max)
 
 BoundingBox BoundingBox::transform(const glm::mat4 &matrix) const
 {
-    glm::vec3 corners[8];
+    std::array<glm::vec3, 8> corners;
     getCorners(corners);
 
     corners[0] = matrix * glm::vec4(corners[0], 1.f);
     glm::vec3 newMin = corners[0];
     glm::vec3 newMax = corners[0];
-    for (int i = 1; i < 8; i++)
+    for (std::size_t i = 1; i < 8; i++)
     {
         corners[i] = matrix * glm::vec4(corners[i], 1.f);
         updateMinMax(&corners[i], &newMin, &newMax);
@@ -99,67 +101,68 @@ Plane::PlaneIntersects Plane::intersects(const BoundingBox &box) const
     glm::vec3 center = (box.min + box.max) * 0.5f;
     glm::vec3 extent = (box.max - box.min) * 0.5f;
     float d = distance(center);
-    float r =
-        fabsf(extent.x * normal_.x) + fabsf(extent.y * normal_.y) + fabsf(extent.z * normal_.z);
-    if (d == r)
+    float r = std::abs(extent.x * normal_.x) + std::abs(extent.y * normal_.y) +
+              std::abs(extent.z * normal_.z);
+    if (absEqual(d, r))
     {
-        return Plane::Intersects_Tangent;
+        return PlaneIntersects::Intersects_Tangent;
     }
-    else if (std::abs(d) < r)
+    else if (lessThan(std::abs(d), r))
     {
-        return Plane::Intersects_Cross;
+        return PlaneIntersects::Intersects_Cross;
     }
 
-    return (d > 0.0f) ? Plane::Intersects_Front : Plane::Intersects_Back;
+    return (d > 0.0f) ? PlaneIntersects::Intersects_Front : PlaneIntersects::Intersects_Back;
 }
 
 Plane::PlaneIntersects Plane::intersects(const glm::vec3 &p0) const
 {
     float d = distance(p0);
-    if (d == 0)
+    if (absEqual(d, 0.0f))
     {
-        return Plane::Intersects_Tangent;
+        return PlaneIntersects::Intersects_Tangent;
     }
-    return (d > 0.0f) ? Plane::Intersects_Front : Plane::Intersects_Back;
+    return (d > 0.0f) ? PlaneIntersects::Intersects_Front : PlaneIntersects ::Intersects_Back;
 }
 
 Plane::PlaneIntersects Plane::intersects(const glm::vec3 &p0, const glm::vec3 &p1) const
 {
-    Plane::PlaneIntersects state0 = intersects(p0);
-    Plane::PlaneIntersects state1 = intersects(p1);
+    PlaneIntersects state0 = intersects(p0);
+    PlaneIntersects state1 = intersects(p1);
 
     if (state0 == state1)
     {
         return state0;
     }
 
-    if (state0 == Plane::Intersects_Tangent || state1 == Plane::Intersects_Tangent)
+    if (state0 == PlaneIntersects::Intersects_Tangent ||
+        state1 == PlaneIntersects::Intersects_Tangent)
     {
-        return Plane::Intersects_Tangent;
+        return PlaneIntersects::Intersects_Tangent;
     }
 
-    return Plane::Intersects_Cross;
+    return PlaneIntersects::Intersects_Cross;
 }
 
 Plane::PlaneIntersects Plane::intersects(const glm::vec3 &p0, const glm::vec3 &p1,
                                          const glm::vec3 &p2) const
 {
-    Plane::PlaneIntersects state0 = intersects(p0, p1);
-    Plane::PlaneIntersects state1 = intersects(p0, p2);
-    Plane::PlaneIntersects state2 = intersects(p1, p2);
+    PlaneIntersects state0 = intersects(p0, p1);
+    PlaneIntersects state1 = intersects(p0, p2);
+    PlaneIntersects state2 = intersects(p1, p2);
 
     if (state0 == state1 && state0 == state2)
     {
         return state0;
     }
 
-    if (state0 == Plane::Intersects_Cross || state1 == Plane::Intersects_Cross ||
-        state2 == Plane::Intersects_Cross)
+    if (state0 == PlaneIntersects::Intersects_Cross ||
+        state1 == PlaneIntersects::Intersects_Cross || state2 == PlaneIntersects::Intersects_Cross)
     {
-        return Plane::Intersects_Cross;
+        return PlaneIntersects::Intersects_Cross;
     }
 
-    return Plane::Intersects_Tangent;
+    return PlaneIntersects::Intersects_Tangent;
 }
 
 bool Frustum::intersects(const BoundingBox &box) const
@@ -219,5 +222,4 @@ bool Frustum::intersects(const glm::vec3 &p0, const glm::vec3 &p1, const glm::ve
 
     return true;
 }
-
 } // namespace SoftGL

@@ -3,14 +3,15 @@
  * @author 	: keith@robot9.me
  *
  */
+#ifndef SOFTGL_GEOMETRY_H
+#define SOFTGL_GEOMETRY_H
 
-#pragma once
+#include <array>
 
 #include "Base/GLMInc.h"
 
 namespace SoftGL
 {
-
 class BoundingBox
 {
 public:
@@ -21,7 +22,7 @@ public:
     {
     }
 
-    void getCorners(glm::vec3 *dst) const;
+    void getCorners(std::array<glm::vec3, 8> &dst) const;
     BoundingBox transform(const glm::mat4 &matrix) const;
     bool intersects(const BoundingBox &box) const;
     void merge(const BoundingBox &box);
@@ -61,17 +62,16 @@ public:
         return normal_;
     }
 
-    Plane::PlaneIntersects intersects(const BoundingBox &box) const;
+    PlaneIntersects intersects(const BoundingBox &box) const;
 
     // check intersect with point (world space)
-    Plane::PlaneIntersects intersects(const glm::vec3 &p0) const;
+    PlaneIntersects intersects(const glm::vec3 &p0) const;
 
     // check intersect with line segment (world space)
-    Plane::PlaneIntersects intersects(const glm::vec3 &p0, const glm::vec3 &p1) const;
+    PlaneIntersects intersects(const glm::vec3 &p0, const glm::vec3 &p1) const;
 
     // check intersect with triangle (world space)
-    Plane::PlaneIntersects intersects(const glm::vec3 &p0, const glm::vec3 &p1,
-                                      const glm::vec3 &p2) const;
+    PlaneIntersects intersects(const glm::vec3 &p0, const glm::vec3 &p1, const glm::vec3 &p2) const;
 
 private:
     glm::vec3 normal_;
@@ -101,7 +101,7 @@ public:
      * planes[4]: left;
      * planes[5]: right;
      */
-    Plane planes[6];
+    std::array<Plane, 6> planes;
 
     /**
      * corners[0]: nearTopLeft;
@@ -113,7 +113,7 @@ public:
      * corners[6]: farBottomLeft;
      * corners[7]: farBottomRight;
      */
-    glm::vec3 corners[8];
+    std::array<glm::vec3, 8> corners;
 
     BoundingBox bbox;
 };
@@ -137,3 +137,4 @@ const glm::vec4 FrustumClipPlane[6] = {{-1, 0, 0, 1}, {1, 0, 0, 1},  {0, -1, 0, 
                                        {0, 1, 0, 1},  {0, 0, -1, 1}, {0, 0, 1, 1}};
 
 } // namespace SoftGL
+#endif // SOFTGL_GEOMETRY_H

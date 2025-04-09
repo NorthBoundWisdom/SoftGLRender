@@ -107,7 +107,7 @@ IncludeCategories:
     CaseSensitive: true
 
   # third party
-  - Regex: "^<(GL/|cavc/|glm/|glew/|quill/|CGAL/|gl/|gtest/|fmt/|boost/|libtess2/|magic_enum/).*>"
+  - Regex: "^<(GL/|cavc/|glm/|glew/|quill/|CGAL/|gl/|gtest/|md5/|boost/|libtess2/|magic_enum/).*>"
     Priority: 5
     SortPriority: 0
     CaseSensitive: true
